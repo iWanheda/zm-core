@@ -1,13 +1,13 @@
 Utils.Logger = {
 	Info = function ( log )
 		if log ~= nil then
-			print( '< ' .. Config.ServerName .. ' > ' .. Utils.Colors.DBlue .. '(INFO)' .. Utils.Colors.White .. ' - ' .. log )
+			print( ( '< %s > %s(INFO)%s - %s' ):format( Config.ServerName, Utils.Colors.DBlue, Utils.Colors.White, log ) )
 		end
 	end,
 
 	Error = function ( log )
 		if log ~= nil then
-			print( '< ' .. Config.ServerName .. ' > ' .. Utils.Colors.Red .. '(ERROR)' .. Utils.Colors.White .. ' - ' .. log )
+			print( ( '< %s > %s(ERROR)%s - %s' ):format( Config.ServerName, Utils.Colors.Red, Utils.Colors.White, log ) )
 		end
 	end,
 
