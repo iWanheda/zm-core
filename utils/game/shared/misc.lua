@@ -12,5 +12,15 @@ Utils.Misc =
 		else
 			return tostring( o )
 		end
+	end,
+
+	TableSize = function( t )
+		local count = 0
+
+		for _, __ in pairs( t ) do
+			count = count + 1
+		end
+
+		return count
 	end
 }

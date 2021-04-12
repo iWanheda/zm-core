@@ -2,25 +2,21 @@ local CPlayer = { }
 CPlayer.__index = CPlayer
 
 -- Create our actual Player instance
-function CPlayer.Create( src, firstname, lastname, age )
+function CPlayer.Create( src )
 	local self = setmetatable( { }, CPlayer )
-
-	self.source = src
-	self.firstname = firstname
-	self.lastname = lastname
-	self.age = age
+	self.src = src
 
 	return self
 end
 
 -- Get player's source
 function CPlayer:GetSource()
-	return self.source
+	return self.src
 end
 
 -- Get player's rockstar identifier
 function CPlayer:GetIdentifier()
-	return tostring( GetPlayerIdentifier( self.source, 0 ) ):sub( 9 )
+	return tostring( GetPlayerIdentifier( self.src, 0 ) ):sub( 9 )
 end
 
 -- Get player's name
@@ -35,16 +31,38 @@ end
 
 -- Get player's base name (FiveM, Steam)
 function CPlayer:GetBaseName()
-	return GetPlayerName( self.source )
+	return GetPlayerName( self.src )
+end
+
+-- Get player's coords
+function CPlayer:GetPosition()
+	return GetEntityCoords( GetPlayerPed( self.src ) )
 end
 
 -- Get player's base name (FiveM, Steam)
 function CPlayer:ShowNotification( type, cap, msg, time )
-	return TriggerClientEvent( '__zm:sendNotification', self.source, { t = type, c = cap, m = msg, ti = time } )
+	return TriggerClientEvent( '__zm:sendNotification', self.src, { t = type, c = cap, m = msg, ti = time } )
+end
+
+function CPlayer:UpdatePlayer( data )
+	TriggerClientEvent( '__zm:updatePlayerData', self.src, data )
+end
+
+function CPlayer:SavePlayer()
+	Utils.Logger.Info( ( 'Saved %i player(s)' ):format( Utils.Misc.TableSize( ZMan.GetPlayers() ) ) )
+	Utils.Logger.Debug( ( 'Saved %s' ):format( self:GetBaseName() ) )
+
+	local playerPos, playerIdentifier = self:GetPosition(), self:GetIdentifier()
+	local x, y, z = playerPos.x, playerPos.y, playerPos.z
+
+	MySQL.Async.execute( 'UPDATE users SET last_location = @last_location WHERE identifier = @id',
+	{
+		['@last_location'] = json.encode( { x, y, z } ),
+		['@id'] = tostring( playerIdentifier )
+	}, function() end )
 end
 
 -- Player management
-
 ZMan = {
 	Players = { },
 
@@ -53,7 +71,7 @@ ZMan = {
 			Utils.Logger.Info( ( 'New player instantiated (%s)' ):format( src ) )
 			-- TODO:
 			--  Retrieve from Database
-			ZMan.Players[src] = CPlayer.Create( src, 'John', 'Doe', 345 )
+			ZMan.Players[src] = CPlayer.Create( src )
 			
 			return
 		end
@@ -63,7 +81,6 @@ ZMan = {
 
 	Destroy = function( src )
 		if ZMan.Players[src] ~= nil then
-			Utils.Logger.Info( ( 'Saved %s' ):format( GetPlayerName( source ) ) )
 			ZMan.Players[src] = nil
 
 			return
@@ -82,9 +99,5 @@ ZMan = {
 
 	GetPlayers = function()
 		return ZMan.Players
-	end,
-
-	UpdatePlayer = function( source )
-		TriggerClientEvent( '__zm:updatePlayerData', source, { Job = 'Bombeiro' } )
 	end
 }

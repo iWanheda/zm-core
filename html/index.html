@@ -15,11 +15,11 @@
 <body>
 	<script>
 		let isDead = false
-		let currentHealth = 100, currentArmor = 100
+		let currentHealth = 0, currentArmor = 0, maxHealth = 0
 
 		const CalculateColor = ( perc ) =>
 		{
-			var r, g, b = 0;
+			var r, g, b = 0
 
 			if ( perc < 50 )
 			{
@@ -48,16 +48,16 @@
 		{
 			if ( e.data.type === 'ZMan/updateUi' )
 			{
-				currentHealth = e.data.health / 2
-				currentArmor = e.data.armor / 2
+				currentHealth = e.data.health
+				currentArmor = e.data.armor
+				maxHealth = e.data.maxHealth
 
-				if ( currentHealth <= 0 )
-					isDead = true
+				isDead = currentHealth <= 0
 
-				$( '#alive' ).css( { color: CalculateColor( currentHealth ) } )
+				$( '#alive' ).css( { color: CalculateColor( currentHealth - 100 ) } )
 
-				$( '#health' ).width( currentHealth )
-				$( '#armor' ).width( currentArmor )
+				$( '#health' ).width( ( currentHealth - 100 ) / 100 * 150 + 1 )
+				$( '#armor' ).width( currentArmor * 150 / 100 ) // May be wrong
 
     			if ( isDead )
 				{

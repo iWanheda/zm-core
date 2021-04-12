@@ -6,7 +6,10 @@ description 'Framework for FiveM'
 
 version '0.1-alpha'
 
-ui_page 'html/index.html'
+ui_page( 'html/index.html' )
+
+loadscreen( 'html/loadscreen.html' )
+loadscreen_manual_shutdown 'yes'
 
 files {
 	'html/**/*.js',

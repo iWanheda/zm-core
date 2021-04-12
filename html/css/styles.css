@@ -113,19 +113,21 @@ body
 
 .ui .status .health
 {
-	max-width: 155px;
+	max-width: 150px;
 	
 	width: 0px;
 	height: 100%;
 	border-radius: 7px;
 
 	background-color: rgb(228, 228, 228);
+	transition: 0.4s;
 }
 
 .ui .status .health-wrapper:hover
 {
 	height: 15px;
 	border-radius: 20px;
+
 	transition: 0.4s;
 }
 
@@ -133,6 +135,8 @@ body
 {
 	height: 15px;
 	border-radius: 20px;
+
+	transition: 0.4s;
 }
 
 .ui .status .health-wrapper
@@ -140,17 +144,17 @@ body
 	width: 150px;
 	height: 5px;
 
-	max-width: 155px;
+	max-width: 150px;
 
 	border-radius: 2.5px;
 
-	background-color: rgb(190, 190, 190);
+	background-color: rgba(190, 190, 190, 0.5);
 	transition: 0.4s;
 }
 
 .ui .status .armor
 {
-	max-width: 155px;
+	max-width: 150px;
 	
 	width: 0px;
 	height: 100%;
@@ -167,10 +171,10 @@ body
 	width: 150px;
 	height: 5px;
 
-	max-width: 155px;
+	max-width: 150px;
 
 	border-radius: 2.5px;
 
-	background-color: rgb(190, 190, 190);
+	background-color: rgba(190, 190, 190, 0.5);
 	transition: 0.4s;
 }

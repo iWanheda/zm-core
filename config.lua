@@ -2,6 +2,7 @@ Config =
 {
 	ServerName = 'ZimaN',
 	Debug = true,
+	AutoSaveTime = 2, -- In Minutes
 	
 	MoneyTypes = 
 	{

@@ -15,11 +15,43 @@ Utils.Game.Input =
 		K = 311
 	},
 
+	Binds = { },
+
 	Pressed = function( key )
 		return IsControlJustPressed( 0, key )
 	end,
 
 	Released = function( key )
 		return IsControlJustReleased( 0, key )
+	end,
+
+	BindKey = function( key, command, desc )
+		Utils.Game.Input.Binds[command] = false
+
+		RegisterCommand( ( '+%s' ):format( command ), function()
+			Utils.Game.Input.Binds[command] = true
+		end, false )
+
+		RegisterCommand( ( '-%s' ):format( command ), function()
+			Utils.Game.Input.Binds[command] = false
+		end, false )
+
+		RegisterKeyMapping( ( '+%s' ):format( command ), desc or '', 'keyboard', key )
+	end,
+
+	GetBindStatus = function( command )
+		return Utils.Game.Input.Binds[command]
 	end
 }
+
+Utils.Game.Input.BindKey( 'f1', 'test', 'Cona' )
+
+Citizen.CreateThread( function()
+	while true do
+		Citizen.Wait( 100 )
+
+		if Utils.Game.Input.GetBindStatus( 'test' ) then
+			print('cona')
+		end
+	end
+end )

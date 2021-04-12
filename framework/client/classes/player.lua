@@ -6,7 +6,7 @@ ZMan =
 	},
 
 	UpdateData = function( key, value )
-		ZMan.Player.Data[key] = value
+		ZMan.Player.Data[tostring( key )] = json.decode( value )
 	end,
 
 	ShowNotification = function( type, cap, message, time )
