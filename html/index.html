@@ -15,7 +15,7 @@
 <body>
 	<script>
 		let isDead = false
-		let currentHealth = 0, currentArmor = 0, maxHealth = 0
+		let currentHealth = 0, currentArmor = 0, maxHealth = 0, currentCash = 0, currentBankMoney = 0, dirtyMoney = 0
 
 		const CalculateColor = ( perc ) =>
 		{
@@ -36,6 +36,14 @@
 			return '#' + ( '000000' + h.toString( 16 ) ).slice( -6 )
 		}
 
+		$( document ).on( 'mouseenter', '.ui', e =>
+		{
+			$( '.balance' ).fadeIn( 600)
+		} ).on( 'mouseleave', '.ui', () =>
+		{
+			$( '.balance' ).fadeOut( 150 )
+		} )
+
 		document.onkeypress = e =>
 		{
     		if ( e.keyCode === 107 )
@@ -52,9 +60,17 @@
 				currentArmor = e.data.armor
 				maxHealth = e.data.maxHealth
 
+				currentCash = e.data.cash
+				currentBankMoney = e.data.bankMon
+				dirtyMoney = e.data.dirtyMon
+
 				isDead = currentHealth <= 0
 
 				$( '#alive' ).css( { color: CalculateColor( currentHealth - 100 ) } )
+
+				$( '.cash' ).text( new Intl.NumberFormat('de-DE').format( currentCash ) )
+				$( '.bank' ).text( new Intl.NumberFormat('de-DE').format( currentBankMoney ) )
+				$( '.userid' ).text( dirtyMoney )
 
 				$( '#health' ).width( ( currentHealth - 100 ) / 100 * 150 + 1 )
 				$( '#armor' ).width( currentArmor * 150 / 100 ) // May be wrong
@@ -87,7 +103,18 @@
 					<div id="armor" class="armor"></div>
 				</div>
 			</div>
+
+			<div class="balance" style="display: none;">
+				<i class="fas fa-dollar-sign"></i>
+				<span class="cash"></span>
+
+				<i class="bank-i fas fa-university"></i>
+				<span class="bank"></span>
+
+				<i class="user-i fas fa-user"></i>
+				<span class="userid"></span>
+			</div>
 		</div>
-	</div>
+    </div>
 </body>
 </html>

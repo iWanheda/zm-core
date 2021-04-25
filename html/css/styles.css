@@ -52,6 +52,7 @@ body
 	border-radius: 50px;
 
 	transition: 0.4s;
+	position: relative;
 
 	box-shadow: 0 0 20px 1px rgba(0, 0, 0, 0.25);
 }
@@ -177,4 +178,39 @@ body
 
 	background-color: rgba(190, 190, 190, 0.5);
 	transition: 0.4s;
+}
+
+.ui .balance
+{
+	position: absolute;
+	float: right;
+	bottom: 6px;
+
+	display: flex;
+	flex-direction: row;
+}
+
+.ui .balance span.cash
+{
+	margin-left: 5px;
+}
+
+.ui .balance .bank-i
+{
+	margin-left: 15px;
+}
+
+.ui .balance span.bank
+{
+	margin-left: 5px;
+}
+
+.ui .balance .user-i
+{
+	margin-left: 15px;
+}
+
+.ui .balance span.userid
+{
+	margin-left: 5px;
 }

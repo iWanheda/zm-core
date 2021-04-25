@@ -16,6 +16,7 @@ Utils.Game =
 		EndTextCommandSetBlipName( mapBlip )
 	end,
 
+	-- Thanks to whoever released this on the forums years ago.
 	DrawWorldText = function( data )
 		local pX, pY, pZ = table.unpack( GetGameplayCamCoords() )
 		local dist = GetDistanceBetweenCoords( pX, pY, pZ, data.Coords.x, data.Coords.y, data.Coords.z, 1 )

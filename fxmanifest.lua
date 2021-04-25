@@ -15,6 +15,7 @@ files {
 	'html/**/*.js',
 	'html/**/*.css',
 	'html/**/*.png',
+	'html/**/*.mp3',
 	'html/*.html'
 }
 

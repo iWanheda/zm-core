@@ -11,7 +11,7 @@ local pedModel = `mp_m_freemode_01`
 
 RegisterNetEvent( '__zm:playerLoaded' )
 AddEventHandler( '__zm:playerLoaded', function()
-	SetEntityCoords( ZMan.Player.Ped, 
+	SetEntityCoords( PlayerPedId(), 
 		ZMan.Player.Data.last_location[1],
 		ZMan.Player.Data.last_location[2], 
 		ZMan.Player.Data.last_location[3],
@@ -91,7 +91,10 @@ Citizen.CreateThread( function()
 				type = 'ZMan/updateUi', 
 				health = GetEntityHealth( PlayerPedId() ),
 				maxHealth = GetEntityMaxHealth( PlayerPedId() ),
-				armor = GetPedArmour( PlayerPedId() )
+				armor = GetPedArmour( PlayerPedId() ),
+				cash = 12834,
+				bankMon = 7377223,
+				dirtyMon = GetPlayerServerId( PlayerId() )
 			} )
 		)
 	end
@@ -102,5 +105,5 @@ RegisterNUICallback( 'ui/close', function( data, cb )
 end )
 
 RegisterCommand( 'sethealth', function( source, args )
-	SetEntityHealth( PlayerPedId(), tonumber( args[1] ) )
+	SetEntityHealth( PlayerPedId(), tonumber( args[1] * 2 ) ) -- Aparently GTA's health system is retarded.
 end, false )

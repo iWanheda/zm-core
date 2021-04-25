@@ -14,10 +14,10 @@ Utils.Misc =
 		end
 	end,
 
-	TableSize = function( t )
+	TableSize = function( table )
 		local count = 0
 
-		for _, __ in pairs( t ) do
+		for _, __ in pairs( table ) do
 			count = count + 1
 		end
 

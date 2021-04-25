@@ -1,10 +1,33 @@
+local MySQLInit = false
+
+MySQL.ready( function ()
+	MySQLInit = true
+end )
+
+ZMan.Items = { }
+
 Citizen.CreateThread( function()
 	if GetResourceState( 'hardcap' ) == 'started' then
 		StopResource( 'hardcap' )
 	end
 
+	while not MySQLInit do
+		Citizen.Wait( 1 )
+	end
+
 	Utils.Logger.Info( 'ZimaN Framework, developed with ❤️' )
 	Utils.Logger.Debug( '❗ Debug mode is active! This will spam a lot in your server/client\'s console.' )
+
+	MySQL.Async.fetchAll( 'SELECT * FROM items', { },
+	function( res )
+		if res ~= nil then
+			for k, v in pairs( res ) do
+				Utils.Logger.Debug( ( 'Adding %s%s (%s) ^7to the item list!' ):format( Utils.Colors.Green, v.label, v.name ) )
+				
+				ZMan.Items[v.name] = v.label
+			end
+		end
+	end )
 end )
 
 RegisterNetEvent( '__zm:test' )
@@ -14,9 +37,11 @@ AddEventHandler( '__zm:test', function()
 	print(Utils.Misc.DumpTable(Player))
 end )
 
-AddEventHandler( 'entityCreating', function()
-	CancelEvent()
-end )
+if Config.SpawnPeds == false then
+	AddEventHandler( 'entityCreating', function()
+		CancelEvent()
+	end )
+end
 
 --[[
 	TODO:
@@ -62,41 +87,59 @@ end )
 -- This also prevents the table from getting empty upon a script restart
 RegisterNetEvent( '__zm:joined' )
 AddEventHandler( '__zm:joined', function()
-	ZMan.Instantiate( source )
-	
 	local _source = source
-	local Player = ZMan.Get( source )
 
 	MySQL.Async.fetchAll( 'SELECT * FROM users WHERE identifier = @id',
 	{
-		['@id'] = Player:GetIdentifier()
+		['@id'] = GetPlayerIdentifier( _source, 0 ):sub( 9 )
 	}, function( res )
 		if res[1] ~= nil then
+			ZMan.Instantiate( _source, res[1].inventory, res[1].last_location )
+			local Player = ZMan.Get( _source )
+
 			Utils.Logger.Debug( ( 'Great! We\'ve got %s\'s info!' ):format( Player:GetBaseName() ) )
 
 			Player:UpdatePlayer(
 				{
-					last_location = res[1].last_location
+					last_location = res[1].last_location,
+					inventory = res[1].inventory
 				}
 			)
 
 			TriggerClientEvent( '__zm:playerLoaded', _source )
 		else
-			MySQL.Async.execute( 'INSERT INTO users VALUES( @id, @identity, @customization, @last_location )',
+			ZMan.Instantiate( _source, { } )
+			local Player = ZMan.Get( _source )
+
+			MySQL.Async.execute( 'INSERT INTO users VALUES( @id, @identity, @customization, @inv, @last_location )',
 			{
 				['@id'] = Player:GetIdentifier(),
-				['@identity'] = '{ first_name = \'Zé\', last_name = \'Tomates\' }',
-				['@customization'] = '{ }',
-				['@last_location'] = '{ 12.94945, 12.63297, 70.62927 }'
+				['@identity'] = json.encode( { first_name = 'Zé', last_name = 'Tomates' } ),
+				['@customization'] = json.encode( { } ),
+				['@inv'] = json.encode( Config.DefaultInventory ),
+				['@last_location'] = json.encode( { } )
 			}, function()
-				Utils.Logger.Debug( ( 'Added %s to the database!' ):format( Player:GetIdentifier() ) )
+				Utils.Logger.Debug( ( 'Added %s to the database!' ):format( Player:GetBaseName() ) )
 			end )
 		end
-	end )
 
-	Player:ShowNotification( 'success', Config.ServerName, 'Welcome to the Server!' )
+		local Player = ZMan.Get( _source )
+		Player:ShowNotification( 'success', Config.ServerName, 'Welcome to the Server!' )
+	end )
 end )
 
 RegisterCommand( 'coords', function( source )
 	print( GetEntityCoords( GetPlayerPed( source ) ) )
+end )
+
+RegisterCommand( 'inv', function( source )
+	local Player = ZMan.Get( source )
+
+	print( Player:GetInventory() )
+end )
+
+RegisterCommand( 'giveitem', function( source, args )
+	local Player, itemName, itemQuant = ZMan.Get( source ), args[1], args[2]
+
+	Player:AddItem( itemName, itemQuant )
 end )
