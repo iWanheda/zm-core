@@ -10,7 +10,7 @@ Config =
 	DefaultInventory =
 	{
 		idcard = 1
-	}
+	},
 	
 	MoneyTypes = 
 	{
