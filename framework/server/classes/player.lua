@@ -163,7 +163,7 @@ ZMan = {
 			return ZMan.Players[src]
 		end
 
-		Utils.Logger.Debug( ( 'Cannot get %s\'s object! Doesn\'t exist on Players table!' ):format( GetPlayerName( source ) ) )
+		Utils.Logger.Debug( ( 'Cannot get %s\'s object! Doesn\'t exist on Players table!' ):format( GetPlayerName( src ) ) )
 	end,
 
 	GetPlayers = function()
