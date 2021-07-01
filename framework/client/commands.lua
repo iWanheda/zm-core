@@ -1,62 +1,46 @@
 local coordsBackup = nil
 
-RegisterCommand( 'test', function( args )
-	print(ZMan.Player.Data.Job)
+RegisterCommand(
+    "tpm",
+    function(args)
+        local waypointHandle = GetFirstBlipInfoId(8)
 
-	--Utils.Game.DrawBlip(
-	--	{
-	--		Coords = vector3( 123, 123, 123 ),
-	--		Label = 'My First Blip!',
-	--		Sprite = 303,
-	--		Scale = 0.6,
-	--		Color = 7,
-	--		ShortRange = true
-	--	}
-	--)
---
-	--print(GetEntityCoords( PlayerPedId() ))
---
-	--while true do
-	--	Citizen.Wait( 1 )
-	--	Utils.Game.DrawWorldText(
-	--		{
-	--			Coords = GetEntityCoords( PlayerPedId() ),
-	--			Font = 1,
-	--			Color = { 255, 255, 255, 255 },
-	--			Text = 'Fox é Gay'
-	--		}
-	--	)
-	--end
+        if DoesBlipExist(waypointHandle) then
+            local waypointCoords = GetBlipInfoIdCoord(waypointHandle)
+            coordsBackup = GetEntityCoords(PlayerPedId())
 
-	TriggerServerEvent( '__zm:test' )
-end, false)
+            for height = 1, 1000 do
+                SetPedCoordsKeepVehicle(PlayerPedId(), waypointCoords.x, waypointCoords.y, height + 0.0)
 
-RegisterCommand( 'tpm', function( args )
-	local waypointHandle = GetFirstBlipInfoId( 8 )
+                local foundGround, zPos = GetGroundZFor_3dCoord(waypointCoords.x, waypointCoords.y, height + 0.0)
 
-	if DoesBlipExist( waypointHandle ) then
-		local waypointCoords = GetBlipInfoIdCoord( waypointHandle )
-		coordsBackup = GetEntityCoords( PlayerPedId() )
+                if foundGround then
+                    SetPedCoordsKeepVehicle(PlayerPedId(), waypointCoords.x, waypointCoords.x, height + 0.0)
+                    break
+                end
 
-		for height = 1, 1000 do
-			SetPedCoordsKeepVehicle( PlayerPedId(), waypointCoords.x, waypointCoords.y, height + 0.0 )
+                Citizen.Wait(5)
+            end
+        end
+    end
+)
 
-			local foundGround, zPos = GetGroundZFor_3dCoord( waypointCoords.x, waypointCoords.y, height + 0.0 )
+RegisterCommand(
+    "back",
+    function(args)
+        if coordsBackup ~= nil then
+            SetPedCoordsKeepVehicle(
+                PlayerPedId(),
+                coordsBackup.x,
+                coordsBackup.y,
+                coordsBackup.z + 0.7,
+                false,
+                false,
+                false,
+                false
+            )
+        end
 
-			if foundGround then
-				SetPedCoordsKeepVehicle( PlayerPedId(), waypointCoords.x, waypointCoords.x, height + 0.0 )
-				break
-			end
-			
-			Citizen.Wait( 5 )
-		end
-	end
-end )
-
-RegisterCommand( 'back', function( args )
-	if coordsBackup ~= nil then
-		SetPedCoordsKeepVehicle( PlayerPedId(), coordsBackup.x, coordsBackup.y, coordsBackup.z + 0.7, false, false, false, false )
-	end
-
-	coordsBackup = nil
-end )
+        coordsBackup = nil
+    end
+)
