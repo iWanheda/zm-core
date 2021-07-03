@@ -3,7 +3,7 @@ CPlayer.__index = CPlayer
 
 -- Create our actual Player instance
 function CPlayer.Create(src, inventory, last_location)
-    local self = setmetatable({}, CPlayer)
+    local self = setmetatable({ }, CPlayer)
 
     self.src = src
     self.inv = json.decode(inventory)
@@ -23,9 +23,9 @@ function CPlayer:GetIdentifier()
 
     if not identifier then
         return self:Kick(
-            ("There was an error getting your identifier (%s), please report this to the system administrator."):format(
-                Config.Identifier
-            )
+            (
+                "There was an error getting your identifier (%s), please report this to the system administrator."
+            ):format(Config.Identifier)
         )
     end
 
@@ -34,7 +34,7 @@ end
 
 -- Get player's name
 function CPlayer:GetName()
-    return {first = self.firstname, last = self.lastname}
+    return { first = self.firstname, last = self.lastname }
 end
 
 -- Get player's age
@@ -58,7 +58,7 @@ end
 
 -- Get player's base name (FiveM, Steam)
 function CPlayer:ShowNotification(type, cap, msg, time)
-    return TriggerClientEvent("__zm:sendNotification", self.src, {t = type, c = cap, m = msg, ti = time})
+    return TriggerClientEvent("__zm:sendNotification", self.src, { t = type, c = cap, m = msg, ti = time })
 end
 
 function CPlayer:UpdatePlayer(data)
@@ -75,7 +75,7 @@ function CPlayer:SavePlayer()
     MySQL.Async.execute(
         "UPDATE users SET last_location = @last_location, inventory = @inv WHERE identifier = @id",
         {
-            ["@last_location"] = json.encode({x, y, z}),
+            ["@last_location"] = json.encode({ x, y, z }),
             ["@inv"] = json.encode(playerInventory),
             ["@id"] = tostring(playerIdentifier)
         },
@@ -98,9 +98,9 @@ function CPlayer:AddItem(item, quantity)
     quantity = tonumber(quantity)
 
     if type(item) ~= "string" then
-        return self:ShowNotification("error", "Inventory", ("Item (%s) needs to be a string!"):format(item))
+        return Utils.Logger.Error(("Item (%s) needs to be a string!"):format(item))
     elseif type(quantity) ~= "number" then
-        return self:ShowNotification("error", "Inventory", "Item quantity needs to be a number!")
+        return Utils.Logger.Error("Item quantity needs to be a number!")
     end
 
     if ZMan.Items[item] ~= nil then
@@ -123,9 +123,9 @@ function CPlayer:RemoveItem(item, quantity)
     quantity = tonumber(quantity)
 
     if type(item) ~= "string" then
-        return self:ShowNotification("error", "Inventory", ("Item (%s) needs to be a string!"):format(item))
+        return Utils.Logger.Error(("Item (%s) needs to be a string!"):format(item))
     elseif type(quantity) ~= "number" then
-        return self:ShowNotification("error", "Inventory", "Item quantity needs to be a number!")
+        return Utils.Logger.Error("Item quantity needs to be a number!")
     end
 
     if ZMan.Items[item] ~= nil then

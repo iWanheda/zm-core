@@ -35,7 +35,7 @@ AddEventHandler(
     "__zm:updatePlayerData",
     function(data)
         for k, v in pairs(data) do
-            Utils.Logger.Debug(("Updating %s%s -> %s%s"):format(Utils.Colors.Green, k, Utils.Colors.Green, v))
+            Utils.Logger.Debug(("Updating %s%s -> %s"):format(Utils.Colors.Green, k, v))
 
             ZMan.UpdateData(k, v)
         end

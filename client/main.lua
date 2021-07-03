@@ -4,6 +4,8 @@ RegisterNetEvent("__zm:getLibrary")
 AddEventHandler(
     "__zm:getLibrary",
     function(cb)
+        ZMan.Utils = Utils
+        
         cb(ZMan)
     end
 )

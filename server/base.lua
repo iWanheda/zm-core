@@ -71,6 +71,8 @@ RegisterNetEvent("__zm:getLibrary")
 AddEventHandler(
     "__zm:getLibrary",
     function(lib)
+        ZMan.Utils = Utils
+
         lib = ZMan
     end
 )
