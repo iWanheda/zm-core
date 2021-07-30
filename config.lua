@@ -3,6 +3,7 @@ Config =
 	ServerName = 'ZimaN',
 	Debug = true,
 	AutoSaveTime = 2, -- In Minutes
+  Queue = false, -- Use a custom queue system
 
 	SpawnPeds = false, -- Should we spawn default GTA MP peds on the streets?
 

@@ -4,7 +4,7 @@ RegisterNetEvent("__zm:getLibrary")
 AddEventHandler(
     "__zm:getLibrary",
     function(cb)
-        ZMan.Utils = Utils
+        ZMan.Utils = Utils -- Do not send server Utils
         
         cb(ZMan)
     end
