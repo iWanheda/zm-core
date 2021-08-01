@@ -19,20 +19,14 @@ Citizen.CreateThread(
     Utils.Logger.Info("ZimaN Framework, developed with ❤️")
     Utils.Logger.Debug("❗ Debug mode is active! This will spam a lot in your server/client's console.")
 
-    print(Utils.Misc.DumpTable(ZMan.Items))
-
     MySQL.Async.fetchAll(
       "SELECT * FROM items",
       {},
       function(res)
         if res ~= nil then
           for k, v in pairs(res) do
-            Utils.Logger.Debug(
-              ("Adding %s%s (%s) ^7to the item list!"):format(Utils.Colors.Green, v.label, v.name)
-            )
-
             --ZMan.Items[v.name] = v.label
-            ZMan.AddItem(v.name, v.label)
+            ZMan.AddItem(v.name, { label = v.label, weight = 1.2, exclusive = true })
           end
         end
       end
@@ -53,16 +47,13 @@ AddEventHandler(
 if Config.SpawnPeds == false then
   AddEventHandler(
     "entityCreating",
-    function()
-      CancelEvent()
+    function(ent)
+      if GetEntityPopulationType(ent) ~= 7 then
+        CancelEvent()
+      end
     end
   )
 end
-
---[[
-	TODO:
-	 HTML >:[
-]]
 
 RegisterNetEvent("__zm:getLibrary")
 AddEventHandler(
@@ -78,7 +69,7 @@ AddEventHandler(
   "playerConnecting",
   function(name, kickReason, def)
     -- def.defer()
-    Utils.Logger.Info(GetPlayerName(source) .. " is joining the server.")
+    Utils.Logger.Info(("%s is joining the server."):format(name))
   end
 )
 

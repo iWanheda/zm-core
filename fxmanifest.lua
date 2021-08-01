@@ -22,8 +22,8 @@ files {
 client_scripts {
 	'utils/**/client/*.lua',
 
-	'framework/client/common.lua',
-	'framework/client/classes/*.lua',
+	'framework/client/classes/common.lua',
+	'framework/client/**/*.lua',
 	'framework/client/*.lua',
 
 	'client/*.lua'
@@ -33,10 +33,8 @@ server_scripts {
 	'@mysql-async/lib/MySQL.lua',
 	'utils/**/server/*.lua',
 
-	'framework/server/classes/common.lua',
-	'framework/server/classes/items.lua',
-	'framework/server/classes/jobs.lua',
-	'framework/server/classes/player.lua',
+	'framework/server/common.lua',
+	'framework/server/**/*.lua',
   'framework/server/*.lua',
 
 	'server/*.lua'

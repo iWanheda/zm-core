@@ -1,13 +1,11 @@
-ZMan.Player =
-{
-    Data = { }
-},
+ZMan.Player = { }
+ZMan.Player.Data = { }
 
-ZMan..UpdateData = function(key, value)
+ZMan.Player.UpdateData = function(key, value)
     ZMan.Player.Data[tostring(key)] = json.decode(value)
-end,
+end
 
-ZMan.ShowNotification = function(type, cap, message, time)
+ZMan.Player.ShowNotification = function(type, cap, message, time)
     if type == "info" then
         exports["swt_notifications"]:Info(cap or "", message or "", "top", time or 2500, true)
     elseif type == "success" then
@@ -23,7 +21,7 @@ RegisterNetEvent("__zm:sendNotification")
 AddEventHandler(
     "__zm:sendNotification",
     function(data)
-        ZMan.ShowNotification(data.t, data.c, data.m, data.ti)
+        ZMan.Player.ShowNotification(data.t, data.c, data.m, data.ti)
     end
 )
 
@@ -34,7 +32,7 @@ AddEventHandler(
         for k, v in pairs(data) do
             Utils.Logger.Debug(("Updating %s%s -> %s"):format(Utils.Colors.Green, k, v))
 
-            ZMan.UpdateData(k, v)
+            ZMan.Player.UpdateData(k, v)
         end
     end
 )
