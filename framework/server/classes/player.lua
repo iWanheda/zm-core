@@ -142,7 +142,7 @@ end
 
 -- Player management
 
-ZMan.Players = { },
+ZMan.Players = {}
 
 ZMan.Instantiate = function(src, inv, pos)
     if ZMan.Players[src] == nil then
@@ -156,7 +156,7 @@ ZMan.Instantiate = function(src, inv, pos)
     Utils.Logger.Debug(
         ("Error instantiating a new Player object! (%s) already exists in the table!"):format(GetPlayerName(src))
     )
-end,
+end
 
 ZMan.Destroy = function(src)
     if ZMan.Players[src] ~= nil then
@@ -168,7 +168,7 @@ ZMan.Destroy = function(src)
     Utils.Logger.Debug(
         ("Error destroying a Player object! (%s) doesn't exist in our table!"):format(GetPlayerName(src))
     )
-end,
+end
 
 ZMan.Get = function(src)
     if ZMan.Players[src] ~= nil then
@@ -176,7 +176,7 @@ ZMan.Get = function(src)
     end
 
     Utils.Logger.Debug(("Cannot get %s's object! Doesn't exist on Players table!"):format(GetPlayerName(src)))
-end,
+end
 
 ZMan.GetPlayers = function()
     return ZMan.Players

@@ -1,14 +1,14 @@
-ZMan.Jobs = { },
+ZMan.Jobs = {}
 
 ZMan.GetJobs = function()
 	return ZMan.Jobs or { }
-end,
+end
 
 ZMan.GetJob = function(job)
 	if ZMan.Jobs[job] == nil then
 		return Utils.Logger.Error(("Job (%s) is not a valid job! (Does not exist in Job table)"):format(job))
 	end
-end,
+end
 
 ZMan.RegisterJob = function(job, data)
 	if ZMan.Jobs[job] ~= nil then

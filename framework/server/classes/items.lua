@@ -1,8 +1,8 @@
-ZMan.Items = { },
+ZMan.Items = {}
 
 ZMan.GetItems = function()
-	return ZMan.Items or { }
-end,
+	return ZMan.Items or {}
+end
 
 ZMan.AddItem = function(item, options)
 	if ZMan.Items[item] ~= nil then
