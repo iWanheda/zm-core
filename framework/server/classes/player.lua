@@ -141,45 +141,43 @@ function CPlayer:RemoveItem(item, quantity)
 end
 
 -- Player management
-ZMan =
-{
-    Players = { },
 
-    Instantiate = function(src, inv, pos)
-        if ZMan.Players[src] == nil then
-            Utils.Logger.Info(("New player instantiated (%s)"):format(src))
-            -- Append new Player instance to player list
-            ZMan.Players[src] = CPlayer.Create(src, inv, pos)
+ZMan.Players = { },
 
-            return
-        end
+ZMan.Instantiate = function(src, inv, pos)
+    if ZMan.Players[src] == nil then
+        Utils.Logger.Info(("New player instantiated (%s)"):format(src))
+        -- Append new Player instance to player list
+        ZMan.Players[src] = CPlayer.Create(src, inv, pos)
 
-        Utils.Logger.Debug(
-            ("Error instantiating a new Player object! (%s) already exists in the table!"):format(GetPlayerName(src))
-        )
-    end,
-
-    Destroy = function(src)
-        if ZMan.Players[src] ~= nil then
-            ZMan.Players[src] = nil
-
-            return
-        end
-
-        Utils.Logger.Debug(
-            ("Error destroying a Player object! (%s) doesn't exist in our table!"):format(GetPlayerName(src))
-        )
-    end,
-
-    Get = function(src)
-        if ZMan.Players[src] ~= nil then
-            return ZMan.Players[src]
-        end
-
-        Utils.Logger.Debug(("Cannot get %s's object! Doesn't exist on Players table!"):format(GetPlayerName(src)))
-    end,
-
-    GetPlayers = function()
-        return ZMan.Players
+        return
     end
-}
+
+    Utils.Logger.Debug(
+        ("Error instantiating a new Player object! (%s) already exists in the table!"):format(GetPlayerName(src))
+    )
+end,
+
+ZMan.Destroy = function(src)
+    if ZMan.Players[src] ~= nil then
+        ZMan.Players[src] = nil
+
+        return
+    end
+
+    Utils.Logger.Debug(
+        ("Error destroying a Player object! (%s) doesn't exist in our table!"):format(GetPlayerName(src))
+    )
+end,
+
+ZMan.Get = function(src)
+    if ZMan.Players[src] ~= nil then
+        return ZMan.Players[src]
+    end
+
+    Utils.Logger.Debug(("Cannot get %s's object! Doesn't exist on Players table!"):format(GetPlayerName(src)))
+end,
+
+ZMan.GetPlayers = function()
+    return ZMan.Players
+end

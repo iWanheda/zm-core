@@ -1,0 +1,2 @@
+-- initialize variables here
+ZMan = {}
