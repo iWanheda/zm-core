@@ -19,7 +19,7 @@ Citizen.CreateThread(
     Utils.Logger.Info("ZimaN Framework, developed with ❤️")
     Utils.Logger.Debug("❗ Debug mode is active! This will spam a lot in your server/client's console.")
 
-    print(Utils.Utils.Misc.DumpTable(ZMan.Items))
+    print(Utils.Misc.DumpTable(ZMan.Items))
 
     MySQL.Async.fetchAll(
       "SELECT * FROM items",
