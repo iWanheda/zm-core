@@ -2,7 +2,7 @@ local coordsBackup = nil
 
 RegisterCommand(
   "tpm",
-  function(args)
+  function(source, args)
     local waypointHandle = GetFirstBlipInfoId(8)
 
     if DoesBlipExist(waypointHandle) then
@@ -27,7 +27,7 @@ RegisterCommand(
 
 RegisterCommand(
   "back",
-  function(args)
+  function(source, args)
     if coordsBackup ~= nil then
       SetPedCoordsKeepVehicle(
         PlayerPedId(),

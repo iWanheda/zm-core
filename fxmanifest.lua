@@ -22,7 +22,8 @@ files {
 client_scripts {
 	'utils/**/client/*.lua',
 
-	'framework/client/classes/common.lua',
+	'framework/client/classes/__ignore.lua', -- Make sure this is loaded before anything else
+
 	'framework/client/**/*.lua',
 	'framework/client/*.lua',
 
@@ -33,7 +34,8 @@ server_scripts {
 	'@mysql-async/lib/MySQL.lua',
 	'utils/**/server/*.lua',
 
-	'framework/server/common.lua',
+	'framework/server/classes/__ignore.lua', -- Make sure this is loaded before anything else
+
 	'framework/server/**/*.lua',
   'framework/server/*.lua',
 

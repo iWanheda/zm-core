@@ -47,7 +47,6 @@ function CPlayer:GetBaseName()
   return GetPlayerName(self.src)
 end
 
--- Get player's coords
 function CPlayer:GetPosition()
   return GetEntityCoords(GetPlayerPed(self.src))
 end
@@ -64,23 +63,48 @@ function CPlayer:UpdatePlayer(data)
   TriggerClientEvent("__zm:updatePlayerData", self.src, data)
 end
 
+function CPlayer:TriggerEvent(event, args)
+  TriggerClientEvent(tostring(event), self.src, args)
+end
+
 function CPlayer:SavePlayer()
   -- This is on save players
   --Utils.Logger.Info(("Saved %i player(s)"):format(Utils.Misc.TableSize(ZMan.GetPlayers())))
   Utils.Logger.Debug(("Saved %s"):format(self:GetBaseName()))
 
   local playerPos, playerIdentifier, playerInventory = self:GetPosition(), self:GetIdentifier(), self:GetInventory()
-  local x, y, z = playerPos.x, playerPos.y, playerPos.z
-
+  local x, y, z, h = playerPos.x, playerPos.y, playerPos.z, GetEntityHeading(GetPlayerPed(self.src))
+  print(h)
   MySQL.Async.execute(
     "UPDATE users SET last_location = @last_location, inventory = @inv WHERE identifier = @id",
     {
-      ["@last_location"] = json.encode({ x, y, z }),
+      ["@last_location"] = json.encode({ x, y, z, h }),
       ["@inv"] = json.encode(playerInventory),
       ["@id"] = tostring(playerIdentifier)
     },
     function() end
   )
+end
+
+Status = { }
+Status.Functions = { }
+
+Status.Health = 1
+
+function CPlayer:SetStatus(status, value)
+  -- We do this method so we can use methods from our CPlayer class
+  if Utils.Misc.TableSize(Status.Functions) == 0 then
+    Status.Functions = {
+      [1] = function(health)
+        self:TriggerEvent("__zm:revivePlayer", 200)
+      end
+    }
+  end
+
+  local fn = Status.Functions[status]
+  if fn then
+    fn(value)
+  end
 end
 
 -- Change this, on join save player inv to table, modify player inv on table and upon leaving/auto save send info back to DB
@@ -124,11 +148,16 @@ function CPlayer:RemoveItem(item, quantity)
     return Utils.Logger.Error("Item quantity needs to be a number!")
   end
 
-  if ZMan.Items[item] ~= nil then
-    self:ShowNotification("success", "Inventory", ("Added (x%s) %s"):format(quantity, ZMan.Items[item]))
+  CreateDrop = function(item, options)
+    print("dropped")
+  end
 
+  if ZMan.Items[item] ~= nil then
     if playerInventory[item] ~= nil then
       playerInventory[item] = nil
+      self:ShowNotification("success", "Inventory", ("Removed (x%s) %s"):format(quantity, ZMan.Items[item]))
+
+      CreateDrop(item, { quantity = quantity })
     end
   else
     self:ShowNotification("error", "Inventory", ("Item (%s) is invalid!"):format(item))
@@ -144,9 +173,10 @@ ZMan.Instantiate = function(src, inv, pos)
   if ZMan.Players[src] == nil then
     Utils.Logger.Info(("New player instantiated (%s)"):format(src))
     -- Append new Player instance to player list
-    ZMan.Players[src] = CPlayer.Create(src, inv, pos)
+    local Player = CPlayer.Create(src, inv, pos)
+    ZMan.Players[src] = Player
 
-    return
+    return Player
   end
 
   Utils.Logger.Debug(

@@ -25,7 +25,6 @@ Citizen.CreateThread(
       function(res)
         if res ~= nil then
           for k, v in pairs(res) do
-            --ZMan.Items[v.name] = v.label
             ZMan.AddItem(v.name, { label = v.label, weight = 1.2, exclusive = true })
           end
         end
@@ -69,7 +68,7 @@ AddEventHandler(
   "playerConnecting",
   function(name, kickReason, def)
     -- def.defer()
-    Utils.Logger.Info(("%s is joining the server."):format(name))
+    Utils.Logger.Info(("%s is connecting to the server."):format(name))
   end
 )
 
@@ -80,9 +79,8 @@ AddEventHandler(
 
     if Player then
       Player:SavePlayer()
+      ZMan.Destroy(source)
     end
-
-    ZMan.Destroy(source)
   end
 )
 
@@ -111,9 +109,8 @@ AddEventHandler(
         ["@id"] = GetPlayerIdentifier(_source, 0):sub(9)
       },
       function(res)
-        if res[1] ~= nil then
-          ZMan.Instantiate(_source, res[1].inventory, res[1].last_location)
-          local Player = ZMan.Get(_source)
+        if res and res[1] ~= nil then
+          local Player = ZMan.Instantiate(_source, res[1].inventory, res[1].last_location)
 
           Utils.Logger.Debug(("Great! We've got %s's info!"):format(Player:GetBaseName()))
 
@@ -126,8 +123,7 @@ AddEventHandler(
 
           TriggerClientEvent("__zm:playerLoaded", _source)
         else
-          ZMan.Instantiate(_source, "{}")
-          local Player = ZMan.Get(_source)
+          local Player = ZMan.Instantiate(_source, {}, {})
 
           MySQL.Async.execute(
             "INSERT INTO users VALUES(@id, @identity, @customization, @job, @grade, @inv, @last_location)",
@@ -143,7 +139,7 @@ AddEventHandler(
               ["@job"] = nil,
               ["@grade"] = 0,
               ["@inv"] = json.encode(Config.DefaultInventory),
-              ["@last_location"] = json.encode({})
+              ["@last_location"] = json.encode(Config.SpawnLocation)
             },
             function()
               Utils.Logger.Debug(("Added %s to the database!"):format(Player:GetBaseName()))
@@ -179,6 +175,21 @@ RegisterCommand(
   function(source, args)
     local Player, itemName, itemQuant = ZMan.Get(source), args[1], args[2]
 
-    Player:AddItem(itemName, itemQuant)
+    if itemName ~= nil and itemQuant ~= nil then
+      Player:AddItem(itemName, itemQuant)
+    else
+      Utils.Logger.Error(("%s tried to give themself an item with wrong attributes. (Item Name: ^3%s^7, Item Quantity: ^3%s^7)")
+        :format(Player:GetBaseName(), itemName or "Undefined", itemQuant or "Undefined")
+      )
+    end
+  end
+)
+
+RegisterCommand(
+  "revive",
+  function(source, args)
+    local Player = ZMan.Get(source)
+
+    Player:SetStatus(Status.Health, 200)
   end
 )
