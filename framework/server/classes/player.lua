@@ -1,13 +1,15 @@
-local CPlayer = { }
+CPlayer = { }
 CPlayer.__index = CPlayer
 
 -- Create our actual Player instance
-function CPlayer.Create(src, inventory, last_location)
+function CPlayer.Create(src, inventory, last_location, job, group)
   local self = setmetatable({ }, CPlayer)
 
   self.src = src
   self.inv = json.decode(inventory)
   self.spawn = json.decode(last_location)
+  self.job = job
+  self.group = group
 
   return self
 end
@@ -24,7 +26,7 @@ function CPlayer:GetIdentifier()
   if not identifier then
     return self:Kick(
       (
-          "There was an error getting your identifier (%s), please report this to the system administrator."
+        "There was an error getting your identifier (%s), please report this to the system administrator."
       ):format(Config.Identifier)
     )
   end
@@ -68,13 +70,12 @@ function CPlayer:TriggerEvent(event, args)
 end
 
 function CPlayer:SavePlayer()
-  -- This is on save players
-  --Utils.Logger.Info(("Saved %i player(s)"):format(Utils.Misc.TableSize(ZMan.GetPlayers())))
-  Utils.Logger.Debug(("Saved %s"):format(self:GetBaseName()))
+  -- This is on player save
+  Utils.Logger.Debug(("Saved ~green~%s"):format(self:GetBaseName()))
 
   local playerPos, playerIdentifier, playerInventory = self:GetPosition(), self:GetIdentifier(), self:GetInventory()
   local x, y, z, h = playerPos.x, playerPos.y, playerPos.z, GetEntityHeading(GetPlayerPed(self.src))
-  print(h)
+
   MySQL.Async.execute(
     "UPDATE users SET last_location = @last_location, inventory = @inv WHERE identifier = @id",
     {
@@ -96,18 +97,16 @@ function CPlayer:SetStatus(status, value)
   if Utils.Misc.TableSize(Status.Functions) == 0 then
     Status.Functions = {
       [1] = function(health)
-        self:TriggerEvent("__zm:revivePlayer", 200)
+        self:TriggerEvent("__zm:revivePlayer", health)
       end
     }
   end
 
-  local fn = Status.Functions[status]
-  if fn then
-    fn(value)
+  if Status.Functions[status] ~= nil then
+    Status.Functions[status](value)
   end
 end
 
--- Change this, on join save player inv to table, modify player inv on table and upon leaving/auto save send info back to DB
 function CPlayer:GetInventory()
   return self.inv
 end
@@ -124,7 +123,7 @@ function CPlayer:AddItem(item, quantity)
   end
 
   if ZMan.Items[item] ~= nil then
-    self:ShowNotification("success", "Inventory", ("Added (x%s) %s"):format(quantity, ZMan.Items[item]))
+    self:ShowNotification("success", "Inventory", ("Added (x%s) %s"):format(quantity, ZMan.Items[item].label))
 
     if playerInventory[item] == nil then
       playerInventory[item] = quantity
@@ -165,45 +164,24 @@ function CPlayer:RemoveItem(item, quantity)
   end
 end
 
--- Player management
-
-ZMan.Players = { }
-
-ZMan.Instantiate = function(src, inv, pos)
-  if ZMan.Players[src] == nil then
-    Utils.Logger.Info(("New player instantiated (%s)"):format(src))
-    -- Append new Player instance to player list
-    local Player = CPlayer.Create(src, inv, pos)
-    ZMan.Players[src] = Player
-
-    return Player
-  end
-
-  Utils.Logger.Debug(
-    ("Error instantiating a new Player object! (%s) already exists in the table!"):format(GetPlayerName(src))
-  )
+function CPlayer:GetJob()
+  return ZMan.GetJob(self.job)
 end
 
-ZMan.Destroy = function(src)
-  if ZMan.Players[src] ~= nil then
-    ZMan.Players[src] = nil
-
-    return
-  end
-
-  Utils.Logger.Debug(
-    ("Error destroying a Player object! (%s) doesn't exist in our table!"):format(GetPlayerName(src))
-  )
+function CPlayer:SetJob(job)
+  self.job = job
 end
 
-ZMan.Get = function(src)
-  if ZMan.Players[src] ~= nil then
-    return ZMan.Players[src]
-  end
-
-  Utils.Logger.Debug(("Cannot get %s's object! Doesn't exist on Players table!"):format(GetPlayerName(src)))
+function CPlayer:GetGroup()
+  return self.group
 end
 
-ZMan.GetPlayers = function()
-  return ZMan.Players
+function CPlayer:SetGroup(group)
+  if group ~= nil and Config.Groups[group] then
+    ExecuteCommand(("remove_principal identifier.license:%s zman.groups.%s"):format(self:GetIdentifier(), self:GetGroup()))
+    self.group = group
+    ExecuteCommand(("add_principal identifier.license:%s zman.groups.%s"):format(self:GetIdentifier(), group))
+  else
+    Utils.Logger.Error(("Group ~red~%s~white~ does not exist in ~lblue~Groups ~white~table! (Check ~yellow~Config.lua~white~)"):format(group), true)
+  end
 end

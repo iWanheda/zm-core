@@ -1,8 +1,28 @@
+ZMan = { }
+
 ZMan.Player = { }
 ZMan.Player.Data = { }
 
+-- Local Player
+
 ZMan.Player.UpdateData = function(key, value)
   ZMan.Player.Data[tostring(key)] = json.decode(value)
+end
+
+ZMan.Player.Teleport = function(pos)
+  DoScreenFadeOut(400)
+
+  while not IsScreenFadedOut() do
+    Citizen.Wait(1)
+  end
+
+  SetEntityCoords(
+    PlayerPedId(),
+    pos.x, pos.y, pos.z,
+    true, true, false, false
+  )
+
+  DoScreenFadeIn(800)
 end
 
 ZMan.Player.ShowNotification = function(type, cap, message, time)
@@ -30,7 +50,7 @@ AddEventHandler(
   "__zm:updatePlayerData",
   function(data)
     for k, v in pairs(data) do
-      Utils.Logger.Debug(("Updating %s%s -> %s"):format(Utils.Colors.Green, k, v))
+      Utils.Logger.Debug(("Updating ~green~%s -> %s"):format(k, v))
 
       ZMan.Player.UpdateData(k, v)
     end

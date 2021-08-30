@@ -10,7 +10,8 @@ Utils.Colors =
 	Fuchsia = '^9'
 }
 
-Utils.Formatting = {
+Utils.Formatting =
+{
 	Bold = '^*',
 	Underline = '^_',
 	Strikethrough = '^~',

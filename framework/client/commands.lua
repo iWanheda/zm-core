@@ -44,3 +44,20 @@ RegisterCommand(
     coordsBackup = nil
   end
 )
+
+RegisterCommand(
+  "car",
+  function(source, args)
+    if args[1] ~= nil then
+      local hash = GetHashKey(args[1])
+      RequestModel(hash)
+
+      if not HasModelLoaded(hash) then
+        Citizen.Wait(1)
+      end
+
+      local x, y, z = GetEntityCoords(PlayerPedId())
+      CreateVehicle(hash, x, y, z, 0.0, true, true)
+    end
+  end
+)

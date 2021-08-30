@@ -1,0 +1,1 @@
+TriggerEvent('__zm:getLibrary', function(lib) ZMan = lib end)

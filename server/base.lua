@@ -19,17 +19,9 @@ Citizen.CreateThread(
     Utils.Logger.Info("ZimaN Framework, developed with ❤️")
     Utils.Logger.Debug("❗ Debug mode is active! This will spam a lot in your server/client's console.")
 
-    MySQL.Async.fetchAll(
-      "SELECT * FROM items",
-      {},
-      function(res)
-        if res ~= nil then
-          for k, v in pairs(res) do
-            ZMan.AddItem(v.name, { label = v.label, weight = 1.2, exclusive = true })
-          end
-        end
-      end
-    )
+    for k, v in pairs(Config.Items) do
+      ZMan.AddItem(k, { label = v.label, weight = v.weight, exclusive = v.exclusive })
+    end
   end
 )
 
@@ -68,7 +60,7 @@ AddEventHandler(
   "playerConnecting",
   function(name, kickReason, def)
     -- def.defer()
-    Utils.Logger.Info(("%s is connecting to the server."):format(name))
+    Utils.Logger.Info(("~green~%s~white~ is connecting to the server."):format(name))
   end
 )
 
@@ -110,7 +102,7 @@ AddEventHandler(
       },
       function(res)
         if res and res[1] ~= nil then
-          local Player = ZMan.Instantiate(_source, res[1].inventory, res[1].last_location)
+          local Player = ZMan.Instantiate(_source, res[1].inventory, res[1].last_location, res[1].group)
 
           Utils.Logger.Debug(("Great! We've got %s's info!"):format(Player:GetBaseName()))
 
@@ -123,10 +115,10 @@ AddEventHandler(
 
           TriggerClientEvent("__zm:playerLoaded", _source)
         else
-          local Player = ZMan.Instantiate(_source, {}, {})
+          local Player = ZMan.Instantiate(_source, {}, {}, "user")
 
           MySQL.Async.execute(
-            "INSERT INTO users VALUES(@id, @identity, @customization, @job, @grade, @inv, @last_location)",
+            "INSERT INTO users VALUES(@id, @identity, @customization, @job, @group, @grade, @inv, @last_location)",
             {
               ["@id"] = Player:GetIdentifier(),
               ["@identity"] = json.encode(
@@ -137,27 +129,21 @@ AddEventHandler(
               ),
               ["@customization"] = json.encode({}),
               ["@job"] = nil,
+              ["@group"] = Config.DefaultGroup,
               ["@grade"] = 0,
               ["@inv"] = json.encode(Config.DefaultInventory),
               ["@last_location"] = json.encode(Config.SpawnLocation)
             },
             function()
-              Utils.Logger.Debug(("Added %s to the database!"):format(Player:GetBaseName()))
+              Utils.Logger.Debug(("Added ~green~%s~white~ to the database!"):format(Player:GetBaseName()))
             end
           )
         end
 
         local Player = ZMan.Get(_source)
-        Player:ShowNotification("success", Config.ServerName, "Welcome to the Server!")
+        Player:ShowNotification("success", Config.ServerName, ("Welcome %s!"):format(Player:GetBaseName()))
       end
     )
-  end
-)
-
-RegisterCommand(
-  "coords",
-  function(source)
-    print(GetEntityCoords(GetPlayerPed(source)))
   end
 )
 
@@ -178,7 +164,7 @@ RegisterCommand(
     if itemName ~= nil and itemQuant ~= nil then
       Player:AddItem(itemName, itemQuant)
     else
-      Utils.Logger.Error(("%s tried to give themself an item with wrong attributes. (Item Name: ^3%s^7, Item Quantity: ^3%s^7)")
+      Utils.Logger.Error(("%s tried to give themself an item with wrong attributes. (Item Name: ~green~%s~white~, Item Quantity: ~green~%s~white~)")
         :format(Player:GetBaseName(), itemName or "Undefined", itemQuant or "Undefined")
       )
     end
