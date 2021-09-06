@@ -12,36 +12,34 @@ Utils.Game =
     SetBlipAsShortRange(mapBlip, data.ShortRange)
 
     BeginTextCommandSetBlipName("STRING")
-    AddTextComponentString(data.Label)
+    AddTextComponentSubstringPlayerName(data.Label)
     EndTextCommandSetBlipName(mapBlip)
   end,
 
   -- Thanks to whoever released this on the forums years ago.
+  -- I just tweaked it a little bit to improve performance :]
   DrawWorldText = function(data)
-    local pX, pY, pZ = table.unpack(GetGameplayCamCoords())
-    local dist = GetDistanceBetweenCoords(pX, pY, pZ, data.Coords.x, data.Coords.y, data.Coords.z, 1)
-    local fov = (1 / GetGameplayCamFov()) * 100
-    local scale = ((1 / dist) * 20) * fov
-
-    SetTextScale(0.1 * scale, 0.1 * scale)
-    SetTextFont(data.Font or 1)
-    SetTextProportional(1)
+    SetTextScale(data.Scale or 0.35, data.Scale or 0.35)
+    SetTextFont(data.Font or 4)
     SetTextColour(data.Color[1] or 255, data.Color[2] or 255, data.Color[3] or 255, data.Color[4] or 255)
     SetTextDropshadow(1, 1, 1, 1, data.Color[4] or 255)
-    SetTextEdge(2, 0, 0, 0, 150)
-    SetTextDropShadow()
     SetTextOutline()
-    SetTextEntry("STRING")
-    SetTextCentre(1)
-    AddTextComponentString(data.Text or "")
+    BeginTextCommandDisplayText("STRING")
+    SetTextCentre(data.Align or true)
+    AddTextComponentSubstringPlayerName(data.Text or "")
     SetDrawOrigin(data.Coords.x, data.Coords.y, data.Coords.z, 0)
-    DrawText(0.0, 0.0)
+    EndTextCommandDisplayText(0.0, 0.0)
+
+    if data.Scale == nil then
+      DrawRect(0.0, 0.0 + 0.0125, 0.009 + (string.len(data.Text)) / 370, 0.03, 0, 0, 0, data.Color[4] or 75)
+    end
+
     ClearDrawOrigin()
   end,
 
   HelpText = function(data)
-    SetTextComponentFormat("STRING")
-    AddTextComponentString(data.text)
-    DisplayHelpTextFromStringLabel(0, 0, data.beep, -1)
+    BeginTextCommandDisplayHelp("STRING")
+    AddTextComponentSubstringPlayerName(data[1])
+    EndTextCommandDisplayHelp(0, false, data[2], -1)
   end
 }

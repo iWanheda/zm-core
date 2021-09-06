@@ -4,15 +4,15 @@ game 'gta5'
 author 'ShahZaM </>'
 description 'Framework for FiveM'
 
-version '0.1-alpha'
+version 'alpha'
 
-ui_page( 'html/index.html' )
+ui_page 'html/index.html'
 
-loadscreen( 'html/loadscreen.html' )
+loadscreen 'html/loadscreen.html'
 loadscreen_manual_shutdown 'yes'
 
 files {
-  'imports.lua', -- So we can use our Object without the need of triggering events
+  'includes.lua', -- So we can use our Object without the need of triggering events
 
 	'html/**/*.js',
 	'html/**/*.css',
@@ -24,8 +24,10 @@ files {
 client_scripts {
 	'utils/**/client/*.lua',
 
+  -- We can't use globbing here because ./framework needs to be loaded before everything else
 	'framework/client/framework.lua',
-	'framework/client/**/*.lua',
+	'framework/client/commands.lua',
+	'framework/client/menu.lua',
 
   'framework/shared/**/client/*.lua',
 
@@ -37,13 +39,14 @@ server_scripts {
 	'utils/**/server/*.lua',
 
 	'framework/server/classes/player.lua', -- Make sure this is loaded before anything else
-	
+
+  -- We can't use globbing here because ./framework needs to be loaded before everything else
   'framework/server/framework.lua',
-	'framework/server/**/*.lua',
+	'framework/server/commands.lua',
 
   'framework/shared/**/server/*.lua',
 
-	'server/*.lua'
+	'server/base.lua'
 }
 
 shared_scripts {
@@ -52,8 +55,6 @@ shared_scripts {
 	'utils/utils.lua',
 	'utils/**/shared/*.lua',
 
-	'framework/shared/__ignore.lua',
-  
 	'framework/shared/*.lua'
 }
 

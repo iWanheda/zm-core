@@ -76,30 +76,15 @@ Citizen.CreateThread(
 
     -- Let's setup our Hud, hide default GTA health component
     local minimap = RequestScaleformMovie("minimap")
-    SetRadarBigmapEnabled(true, false)
+    SetBigmapActive(true, false)
 
-    Wait(0)
-
-    SetRadarBigmapEnabled(false, false)
-
-    Wait(100)
+    Citizen.Wait(0)
+    SetBigmapActive(false, false)
+    Citizen.Wait(100)
 
     BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
     ScaleformMovieMethodAddParamInt(3)
     EndScaleformMovieMethod()
-  end
-)
-
-Citizen.CreateThread(
-  function()
-    while true do
-      Citizen.Wait(4)
-      SetPlayerHealthRechargeMultiplier(PlayerId(), 0.0)
-
-      if Utils.Game.Input.Pressed(Utils.Game.Input.Keys.K) then
-        SetNuiFocus(true, true)
-      end
-    end
   end
 )
 
@@ -131,3 +116,89 @@ RegisterNUICallback(
     SetNuiFocus(false, false)
   end
 )
+
+function RayCastGameplayCamera(distance)
+  local cameraRotation = GetGameplayCamRot()
+	local cameraCoord = GetGameplayCamCoord()
+
+  local adjustedRotation = 
+	{ 
+		x = math.pi / 180 * cameraRotation.x, 
+		y = math.pi / 180 * cameraRotation.y, 
+		z = math.pi / 180 * cameraRotation.z 
+	}
+
+	local direction =
+  {
+		x = -math.sin(adjustedRotation.z) * math.abs(math.cos(adjustedRotation.x)), 
+		y = math.cos(adjustedRotation.z) * math.abs(math.cos(adjustedRotation.x)), 
+		z = math.sin(adjustedRotation.x)
+	}
+
+	local destination = 
+	{ 
+		x = cameraCoord.x + direction.x * distance, 
+		y = cameraCoord.y + direction.y * distance, 
+		z = cameraCoord.z + direction.z * distance 
+	}
+
+	local a, b, c, d, e = GetShapeTestResult(StartShapeTestRay(cameraCoord.x, cameraCoord.y, cameraCoord.z, destination.x, destination.y, destination.z, -1, PlayerPedId(), 4))
+	return b, c
+end
+
+local spellCast = nil
+
+RegisterCommand("nigga", function() spellCast = not spellCast end, false)
+
+Citizen.CreateThread(function()
+  local waitMs = 800
+
+	while true do
+		Citizen.Wait(waitMs)
+
+    if spellCast then -- If we're casting a spell
+      waitMs = 3
+      local hit, coords = RayCastGameplayCamera(40.0)
+
+      if hit and coords ~= vector3(0.0, 0.0, 0.0) then
+        DrawMarker(0, coords.x, coords.y, coords.z + 1.7, 0, 0, 0, 0, 0, 0, 0.8, 0.8, 0.4, 0, 255, 0, 150, true, false, false, true, nil, nil, false)
+        DrawMarker(27, coords.x, coords.y, coords.z + 0.05, 0, 0, 0, 0, 0, 0, 1.5, 1.5, 1.5, 0, 255, 0, 150, false, false, false, true, nil, nil, false)
+      
+        if IsControlJustReleased(0, 51) then
+          ZMan.Player.ScreenFade(function()
+            SetEntityCoords(PlayerPedId(), coords.x, coords.y, coords.z + 0.05, GetEntityHeading(PlayerPedId()), false)
+            spellCast = nil
+          end, 400)
+        end
+      end
+    else
+      waitMs = 800
+    end
+	end
+end)
+
+RegisterCommand("tpc", function(source, args, raw)
+  SetEntityCoords(PlayerPedId(), tonumber(args[1]), tonumber(args[2]), tonumber(args[3]), true, true, true, false)
+end)
+
+-- Put this into a new resource (zm-addons) ?
+Citizen.CreateThread(function()
+  local waitMs = 800
+
+  while true do
+    Citizen.Wait(waitMs)
+
+    if #(GetEntityCoords(PlayerPedId()) - Config.DefaultHabitat) < 2.0 then
+      waitMs = 3
+
+      -- Change the design? Maybe a circle around the key and the rest in a rect or something ??
+      Utils.Game.DrawWorldText(
+      {
+        Coords = Config.DefaultHabitat,
+        Text = "~g~E~w~ - Exit Apartment" --L("_EXIT_APARTMENT")
+      })
+    else
+      waitMs = 800
+    end
+  end
+end)

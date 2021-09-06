@@ -57,7 +57,7 @@ RegisterCommand(
       end
 
       local x, y, z = GetEntityCoords(PlayerPedId())
-      CreateVehicle(hash, x, y, z, 0.0, true, true)
+      CreateVehicle(hash, x, y, z, 0.0, true, false)
     end
   end
 )

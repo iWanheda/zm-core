@@ -2,12 +2,27 @@ CPlayer = { }
 CPlayer.__index = CPlayer
 
 -- Create our actual Player instance
-function CPlayer.Create(src, inventory, last_location, job, group)
+function CPlayer.Create(src, inventory, identity, last_location, job, group)
   local self = setmetatable({ }, CPlayer)
 
+  local playerInv = json.decode(inventory)
+
+  for k, v in pairs(playerInv) do
+    if Config.Items[k] == nil then
+      Utils.Logger.Warn(("Player ~green~%s~white~ has an ~red~invalid~white~ item ~yellow~(%s)"):format(GetPlayerName(src), k))
+      playerInv[k] = nil -- Remove the invalid item from Player's inventory
+    end
+  end
+
   self.src = src
-  self.inv = json.decode(inventory)
+
+  self.inv = playerInv
+  
+  self.firstname = identity.first
+  self.lastname = identity.last
+
   self.spawn = json.decode(last_location)
+
   self.job = job
   self.group = group
 

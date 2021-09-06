@@ -1,8 +1,8 @@
 ZMan.RegisterCommand(
   "coords",
   function(source)
-    print(GetEntityCoords(GetPlayerPed(source)))
-  end, false, { "admin" }
+    Utils.Logger.Info(("%s => %s"):format(GetEntityCoords(GetPlayerPed(source)), GetEntityHeading(GetPlayerPed(source))))
+  end, false
 )
 
 ZMan.RegisterCommand(
@@ -20,11 +20,11 @@ ZMan.RegisterCommand(
     if type(targetSource) == "number" then
       local Target = ZMan.Get(targetSource)
 
-      if Target then
-        if targetGroup then
+      if Target and targetGroup then
+        if Config.Groups[targetGroup] ~= nil then
           Target:SetGroup(targetGroup)
         end
       end
     end
-  end, true
+  end, true, { "admin" }
 )

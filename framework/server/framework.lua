@@ -1,21 +1,30 @@
 ZMan = { }
 
+ZMan.Resource = GetCurrentResourceName() -- Let's cache it! :]
+
 ZMan.Players = { }
 ZMan.Items = { }
 ZMan.Jobs = { }
 ZMan.Commands = { }
 
+ZMan.Mods = { }
+
+-- To test
+ZMan.Modules = { ["main"] = { } }
+ZMan.Mods.Excluded = 0
+
 -- Player management
 
-ZMan.Instantiate = function(src, inv, pos)
+ZMan.Instantiate = function(src, inv, ident, pos, group)
   if ZMan.Players[src] == nil then
     -- Append new Player instance to player list
-    local Player = CPlayer.Create(src, inv, pos, group)
+    local Player = CPlayer.Create(src, inv, ident, pos, group)
     ZMan.Players[src] = Player
 
-    ExecuteCommand(('add_principal identifier.license:%s group.%s'):format(Player:GetIdentifier(), Player:GetGroup()))
+    -- Not sure if I have to add principal everytime a player joins?
+    --ExecuteCommand(('add_principal identifier.license:%s group.%s'):format(Player:GetIdentifier(), Player:GetGroup()))
 
-    Utils.Logger.Info(("New player instantiated ~green~(%s)~white~ with ID ~green~%s"):format(Player:GetBaseName(), src))
+    Utils.Logger.Info(("New player instantiated ~green~(%s)~white~ => ~green~%s"):format(Player:GetBaseName(), src))
 
     return Player
   end
@@ -126,3 +135,99 @@ ZMan.RegisterCommand = function(cmd, cb, console, group)
     end, (type(group) == "table"))
   end
 end
+
+-- Module Management (huge thanks to ESX Development team for their idea, take the credits <3)
+-- This is very W.I.P yet, do not use YET
+
+local Module = ZMan.Modules["main"]
+Module.Category = { }
+
+local moduleList = json.decode(LoadResourceFile(ZMan.Resource, "modules/modules.list.json"))
+
+for k, v in pairs(moduleList) do
+  if v ~= nil and v ~= "" and type(v) ~= string then
+    Module.Category[v] = json.decode(LoadResourceFile(ZMan.Resource, ("modules/%s/modules.json"):format(v)))
+  else
+    Utils.Logger.Warn(
+      ("File ~green~modules/modules.list.json~white~ contains an ~red~invalid~white~ module => ~lblue~(%s)")
+      :format(v ~= nil and "Unnamed" or "Not Defined")
+    )
+  end
+end
+
+ZMan.CreateEnvironments = function(hierarchy, cb)
+  local envs = { }
+
+  -- Re-do this, wtf
+  for k, v in pairs(Module.Category[hierarchy]) do
+    -- There's no need for us to keep going if the Module is excluded
+    if v:find("^exc.") then
+      ZMan.Mods.Excluded = ZMan.Mods.Excluded + 1
+      goto continue -- Weirdly Lua doesn't have a continue statement, so we use goto as a way to go around it
+    end
+
+    local env = { }
+
+    env.name = v
+    env.hierarchy = hierarchy
+    env.module = { name = v, path = ("modules/%s/%s"):format(hierarchy, v) }
+    env.fn = function()
+      --[[ Load Module here ]]
+    end
+
+    if envs[v] == nil then
+      envs[v] = env
+    end
+
+    Utils.Logger.Info(("Creating environment for ~green~%s/%s~white~ module."):format(hierarchy, v))
+  
+    ::continue::
+  end
+
+  cb(envs)
+end
+
+ZMan.CreateEnvironments("party", function(mods)
+  ZMan.Mods.List = mods
+  
+  for k, v in pairs(mods) do
+    v.fn()
+  end
+
+  Utils.Logger.Info(
+    ("Successfuly loaded ~green~all~white~ modules => (~red~%i~white~ excluded)")
+    :format(ZMan.Mods.Excluded), true
+  )
+end)
+
+ZMan.LoadMod = function(mod, hierarchy)
+  local error, modConfig = false, LoadResourceFile(ZMan.Resource, ("%s/%s/config.module.lua"):format(hierarchy, mod))
+
+  if modConfig then
+    if error then
+      return Utils.Logger.Error(("There was an error loading ~lblue~(%s/%s)~white~ => ~red~https://pastebin.com/xy6H5fg"):format(hierarchy or "boot", mod), true)
+    end
+
+    Utils.Logger.Info(("Loaded ~lblue~(%s/%s)~white~ with success!"):format(hierarchy or "party", mod), true)
+  end
+end
+
+ZMan.Mods.Stop = function(mod)
+  if ZMan.Mods.List[mod] ~= nil then
+    -- Stop module
+    ZMan.Mods.List[mod] = nil
+
+    Utils.Logger.Info(("Successfuly ~red~stopped~white~ a module => ~green~(%s)"):format(mod), true)
+  end
+end
+
+Mod = ZMan.LoadMod
+
+-- Maybe use "." as the separator for path? NaMeSpAcEs
+-- This is used so we can use mod's functions in other modules
+Mod("ems")
+Mod("police")
+
+-- In case you want to stop a module in real time, not sure if it's possible yet, but should be.
+-- All we need is to unload the file from memory
+ZMan.Mods.Stop("police")

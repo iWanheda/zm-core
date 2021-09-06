@@ -102,20 +102,26 @@ AddEventHandler(
       },
       function(res)
         if res and res[1] ~= nil then
-          local Player = ZMan.Instantiate(_source, res[1].inventory, res[1].last_location, res[1].group)
+          if res[1].group and Config.Groups[res[1].group] == nil then
+            res[1].group = Config.DefaultGroup
+          end
+
+          local Player = ZMan.Instantiate(_source, res[1].inventory, res[1].identity, res[1].last_location, res[1].group)
 
           Utils.Logger.Debug(("Great! We've got %s's info!"):format(Player:GetBaseName()))
 
           Player:UpdatePlayer(
             {
               last_location = res[1].last_location,
-              inventory = res[1].inventory
+              identity = res[1].identity,
+              job = res[1].job, -- TODO: Send Job object
+              group = res[1].group
             }
           )
 
           TriggerClientEvent("__zm:playerLoaded", _source)
         else
-          local Player = ZMan.Instantiate(_source, {}, {}, "user")
+          local Player = ZMan.Instantiate(_source, {}, {}, {}, "regular")
 
           MySQL.Async.execute(
             "INSERT INTO users VALUES(@id, @identity, @customization, @job, @group, @grade, @inv, @last_location)",
@@ -128,7 +134,7 @@ AddEventHandler(
                 }
               ),
               ["@customization"] = json.encode({}),
-              ["@job"] = nil,
+              ["@job"] = json.encode({}),
               ["@group"] = Config.DefaultGroup,
               ["@grade"] = 0,
               ["@inv"] = json.encode(Config.DefaultInventory),
@@ -171,11 +177,11 @@ RegisterCommand(
   end
 )
 
-RegisterCommand(
+ZMan.RegisterCommand(
   "revive",
   function(source, args)
     local Player = ZMan.Get(source)
 
     Player:SetStatus(Status.Health, 200)
-  end
+  end, false
 )
