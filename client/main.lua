@@ -30,85 +30,81 @@ AddEventHandler(
   end
 )
 
-Citizen.CreateThread(
-  function()
-    Utils.Logger.Debug(("Changing Player's ped to: %s"):format(pedModel))
+Citizen.CreateThread(function()
+  Utils.Logger.Debug(("Changing Player's ped to: %s"):format(pedModel))
 
-    -- If Data still hasn't been loaded into memory, let's wait.
-    while Utils.Misc.TableSize(ZMan.Player.Data) == 0 do
-      Citizen.Wait(1)
-    end
-
+  -- If Data still hasn't been loaded into memory, let's wait.
+  while Utils.Misc.TableSize(ZMan.Player.Data) == 0 do
+    Citizen.Wait(1)
+  end
+  
+  RequestModel(pedModel)
+  while not HasModelLoaded(pedModel) do
     RequestModel(pedModel)
-    while not HasModelLoaded(pedModel) do
-      RequestModel(pedModel)
-      Citizen.Wait(1)
-    end
+    Citizen.Wait(1)
+  end
 
-    SetPlayerModel(PlayerId(), pedModel)
-    SetPedComponentVariation(PlayerPedId(), 0, 0, 0, 2)
+  SetPlayerModel(PlayerId(), pedModel)
+  SetPedComponentVariation(PlayerPedId(), 0, 0, 0, 2)
 
-    exports.spawnmanager:setAutoSpawn(false)
+  exports.spawnmanager:setAutoSpawn(false)
 
-    local playerPos = ZMan.Player.Data.last_location
+  local playerPos = ZMan.Player.Data.last_location
 
-    exports.spawnmanager:spawnPlayer(
+  exports.spawnmanager:spawnPlayer(
+    {
+      x = playerPos[1] or Config.SpawnLocation.x,
+      y = playerPos[2] or Config.SpawnLocation.y,
+      z = playerPos[3] or Config.SpawnLocation.z,
+      heading = playerPos[4],
+      skipFade = false
+    }
+  )
+
+  SendNuiMessage(
+    json.encode(
       {
-        x = playerPos[1],
-        y = playerPos[2],
-        z = playerPos[3],
-        heading = playerPos[4],
-        skipFade = false
+        type = "ZMan/closeLoading"
       }
     )
+  )
+  Citizen.Wait(2000)
+  ShutdownLoadingScreenNui()
 
+  SetPedDefaultComponentVariation(GetPlayerPed())
+
+  -- Let's setup our Hud, hide default GTA health component
+  local minimap = RequestScaleformMovie("minimap")
+  SetBigmapActive(true, false)
+
+  Citizen.Wait(0)
+  SetBigmapActive(false, false)
+  Citizen.Wait(100)
+
+  BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
+  ScaleformMovieMethodAddParamInt(3)
+  EndScaleformMovieMethod()
+end)
+
+Citizen.CreateThread(function()
+  while true do
+    Citizen.Wait(1500)
     SendNuiMessage(
       json.encode(
         {
-          type = "ZMan/closeLoading"
+          type = "ZMan/updateUi",
+          health = GetEntityHealth(PlayerPedId()),
+          maxHealth = GetEntityMaxHealth(PlayerPedId()),
+          armor = GetPedArmour(PlayerPedId()),
+          cash = 12834,
+          bankMon = 7377223,
+          dirtyMon = 1255,
+          userId = GetPlayerServerId(PlayerId())
         }
       )
     )
-    Citizen.Wait(2000)
-    ShutdownLoadingScreenNui()
-
-    SetPedDefaultComponentVariation(GetPlayerPed())
-
-    -- Let's setup our Hud, hide default GTA health component
-    local minimap = RequestScaleformMovie("minimap")
-    SetBigmapActive(true, false)
-
-    Citizen.Wait(0)
-    SetBigmapActive(false, false)
-    Citizen.Wait(100)
-
-    BeginScaleformMovieMethod(minimap, "SETUP_HEALTH_ARMOUR")
-    ScaleformMovieMethodAddParamInt(3)
-    EndScaleformMovieMethod()
   end
-)
-
-Citizen.CreateThread(
-  function()
-    while true do
-      Citizen.Wait(1500)
-      SendNuiMessage(
-        json.encode(
-          {
-            type = "ZMan/updateUi",
-            health = GetEntityHealth(PlayerPedId()),
-            maxHealth = GetEntityMaxHealth(PlayerPedId()),
-            armor = GetPedArmour(PlayerPedId()),
-            cash = 12834,
-            bankMon = 7377223,
-            dirtyMon = 1255,
-            userId = GetPlayerServerId(PlayerId())
-          }
-        )
-      )
-    end
-  end
-)
+end)
 
 RegisterNUICallback(
   "ui/close",
@@ -153,13 +149,13 @@ RegisterCommand("nigga", function() spellCast = not spellCast end, false)
 Citizen.CreateThread(function()
   local waitMs = 800
 
-	while true do
-		Citizen.Wait(waitMs)
-
+  while true do
+    Citizen.Wait(waitMs)
+    
     if spellCast then -- If we're casting a spell
       waitMs = 3
       local hit, coords = RayCastGameplayCamera(40.0)
-
+      
       if hit and coords ~= vector3(0.0, 0.0, 0.0) then
         DrawMarker(0, coords.x, coords.y, coords.z + 1.7, 0, 0, 0, 0, 0, 0, 0.8, 0.8, 0.4, 0, 255, 0, 150, true, false, false, true, nil, nil, false)
         DrawMarker(27, coords.x, coords.y, coords.z + 0.05, 0, 0, 0, 0, 0, 0, 1.5, 1.5, 1.5, 0, 255, 0, 150, false, false, false, true, nil, nil, false)
@@ -174,7 +170,7 @@ Citizen.CreateThread(function()
     else
       waitMs = 800
     end
-	end
+  end
 end)
 
 RegisterCommand("tpc", function(source, args, raw)
