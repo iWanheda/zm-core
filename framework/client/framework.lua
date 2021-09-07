@@ -36,18 +36,6 @@ ZMan.Player.ShowNotification = function(type, cap, message, time)
   end
 end
 
-ZMan.Player.ScreenFade = function(cb, time)
-  DoScreenFadeOut(time)
-
-  while not IsScreenFadedOut() do
-    Citizen.Wait(1)
-  end
-
-  cb()
-
-  DoScreenFadeIn(time)
-end
-
 RegisterNetEvent("__zm:sendNotification")
 AddEventHandler(
   "__zm:sendNotification",

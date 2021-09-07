@@ -29,6 +29,11 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
   return self
 end
 
+-- Get player's object
+function CPlayer:Get()
+  return self
+end
+
 -- Get player's source
 function CPlayer:GetSource()
   return self.src

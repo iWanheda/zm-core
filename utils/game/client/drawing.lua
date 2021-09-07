@@ -21,8 +21,8 @@ Utils.Game =
   DrawWorldText = function(data)
     SetTextScale(data.Scale or 0.35, data.Scale or 0.35)
     SetTextFont(data.Font or 4)
-    SetTextColour(data.Color[1] or 255, data.Color[2] or 255, data.Color[3] or 255, data.Color[4] or 255)
-    SetTextDropshadow(1, 1, 1, 1, data.Color[4] or 255)
+    SetTextColour((data.Color and data.Color[1]) or 255, (data.Color and data.Color[2]) or 255, (data.Color and data.Color[3]) or 255, (data.Color and data.Color[4]) or 255)
+    SetTextDropshadow(1, 1, 1, 1, (data.Color and data.Color[4]) or 255)
     SetTextOutline()
     BeginTextCommandDisplayText("STRING")
     SetTextCentre(data.Align or true)
@@ -31,7 +31,7 @@ Utils.Game =
     EndTextCommandDisplayText(0.0, 0.0)
 
     if data.Scale == nil then
-      DrawRect(0.0, 0.0 + 0.0125, 0.009 + (string.len(data.Text)) / 370, 0.03, 0, 0, 0, data.Color[4] or 75)
+      DrawRect(0.0, 0.0 + 0.0125, 0.009 + (string.len(data.Text)) / 370, 0.03, 0, 0, 0, (data.Color and data.Color[4]) or 75)
     end
 
     ClearDrawOrigin()

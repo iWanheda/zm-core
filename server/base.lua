@@ -51,6 +51,7 @@ AddEventHandler(
   "__zm:getLibrary",
   function(cb)
     ZMan.Utils = Utils
+    ZMan.CPlayer = CPlayer
 
     cb(ZMan)
   end
@@ -59,7 +60,6 @@ AddEventHandler(
 AddEventHandler(
   "playerConnecting",
   function(name, kickReason, def)
-    -- def.defer()
     Utils.Logger.Info(("~green~%s~white~ is connecting to the server."):format(name))
   end
 )
@@ -94,6 +94,10 @@ AddEventHandler(
   "__zm:joined",
   function()
     local _source = source
+
+    if ZMan.Players[source] ~= nil then
+      return -- Use this to avoid event spammers (with cheats)
+    end
 
     MySQL.Async.fetchAll(
       "SELECT * FROM users WHERE identifier = @id",
@@ -153,16 +157,7 @@ AddEventHandler(
   end
 )
 
-RegisterCommand(
-  "inv",
-  function(source)
-    local Player = ZMan.Get(source)
-
-    print(Player:GetInventory())
-  end
-)
-
-RegisterCommand(
+ZMan.RegisterCommand(
   "giveitem",
   function(source, args)
     local Player, itemName, itemQuant = ZMan.Get(source), args[1], args[2]
@@ -174,7 +169,7 @@ RegisterCommand(
         :format(Player:GetBaseName(), itemName or "Undefined", itemQuant or "Undefined")
       )
     end
-  end
+  end, false
 )
 
 ZMan.RegisterCommand(
@@ -185,3 +180,13 @@ ZMan.RegisterCommand(
     Player:SetStatus(Status.Health, 200)
   end, false
 )
+
+Citizen.CreateThread(function()
+  Wait(1500) -- Wait for the table to be filled
+
+  for k, v in pairs(ZMan.GetPlayers()) do
+    local Player = ZMan.Get(k) -- Get the player instance
+
+    print(Player:GetIdentifier()) -- Prints the identifier, works fine.
+  end
+end)

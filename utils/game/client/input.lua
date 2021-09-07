@@ -17,21 +17,13 @@ Utils.Game.Input =
 
   Binds = { },
 
-  Pressed = function(key)
-    return IsControlJustPressed(0, key)
-  end,
-
-  Released = function(key)
-    return IsControlJustReleased(0, key)
-  end,
-
   BindKey = function(key, command, fn, desc)
     Utils.Game.Input.Binds[command] = fn
 
     RegisterCommand(
       ("%s"):format(command),
       function()
-        Utils.Game.Input.GetBindFn(command)()
+        fn()
       end,
       false
     )

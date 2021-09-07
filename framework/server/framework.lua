@@ -30,7 +30,7 @@ ZMan.Instantiate = function(src, inv, ident, pos, group)
   end
 
   Utils.Logger.Debug(
-    ("Error instantiating a new Player object! (%s) already exists in the table!"):format(GetPlayerName(src))
+    ("Error instantiating a new Player object! ~green~(%s)~white~ already exists in the table!"):format(GetPlayerName(src))
   )
 end
 
@@ -42,7 +42,7 @@ ZMan.Destroy = function(src)
   end
 
   Utils.Logger.Debug(
-    ("Error destroying a Player object! (%s) doesn't exist in our table!"):format(GetPlayerName(src))
+    ("Error destroying a Player object! ~green~(%s)~white~ doesn't exist in our table!"):format(GetPlayerName(src))
   )
 end
 
@@ -66,7 +66,7 @@ end
 
 ZMan.AddItem = function(item, options)
 	if ZMan.Items[item] ~= nil then
-		return Utils.Logger.Error(("Item (%s) already exists in our Item table!"):format(item))
+		return Utils.Logger.Error(("Item ~green~(%s)~white~ already exists in our Item table!"):format(item))
 	end
 
 	if options.label and options.weight and options.exclusive then
@@ -91,7 +91,7 @@ end
 
 ZMan.GetJob = function(job)
 	if ZMan.Jobs[job] == nil then
-		return Utils.Logger.Error(("Job (%s) is not a valid job! (Does not exist in Jobs table)"):format(job))
+		return Utils.Logger.Error(("Job ~green~(%s)~white~ is not a valid job! (Does not exist in Jobs table)"):format(job))
 	end
 
   return ZMan.Jobs[job]
@@ -106,7 +106,7 @@ ZMan.RegisterJob = function(job, data)
 		ZMan.Jobs[job] = data
 		Utils.Logger.Debug(("Added job ~green~(%s)~white~ to the Jobs list!"):format(job))
 	else
-		Utils.Logger.Error(('Cannot add job %s because it has invalid options! Label: ~green~%s~white~ Grades: ~green~%s'):format(job, data.label or "Not Defined", data.grades or "Not Defined"))
+		Utils.Logger.Error(('Cannot add job ~green~(%s)~white~ because it has invalid options! Label: ~green~%s~white~ Grades: ~green~%s'):format(job, data.label or "Not Defined", data.grades or "Not Defined"))
 	end
 end
 

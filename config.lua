@@ -9,9 +9,6 @@ Config =
 
   SpawnPeds = false, -- Should we spawn default GTA MP peds on the streets?
 
-  UseIpl = nil,
-  DefaultHabitat = vector3(266.0572, -1007.618, -101.0198),
-
   -- Player will be given these items upon first join
   DefaultInventory =
   {
