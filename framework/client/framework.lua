@@ -10,7 +10,6 @@ ZMan.Player.Data = { }
 
 -- Local Player
 
--- TODO: Fix some errors?
 ZMan.Player.UpdateData = function(key, value)
   ZMan.Player.Data[tostring(key)] = json.decode(value)
 end

@@ -48,7 +48,7 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
     local identifier = tostring(GetPlayerIdentifier(self.src, 0)):sub(9)
 
     if not identifier then
-      return self:Kick(
+      return self.Kick(
         (
           "There was an error getting your identifier (%s), please report this to the system administrator."
         ):format(Config.Identifier)
@@ -105,9 +105,9 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
   -- TODO: Add job and such...
   self.SavePlayer = function()
     -- This is on player save
-    Utils.Logger.Debug(("Saved ~green~%s"):format(self:GetBaseName()))
+    Utils.Logger.Debug(("Saved ~green~%s"):format(self.GetBaseName()))
 
-    local playerPos, playerIdentifier, playerInventory = self:GetPosition(), self:GetIdentifier(), self:GetInventory()
+    local playerPos, playerIdentifier, playerInventory = self.GetPosition(), self.GetIdentifier(), self.GetInventory()
     local x, y, z, h = playerPos.x, playerPos.y, playerPos.z, GetEntityHeading(GetPlayerPed(self.src))
 
     MySQL.Async.execute(
@@ -124,9 +124,10 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
   self.SetStatus = function(status, value)
     -- We do this method so we can use methods from our CPlayer class
     if Utils.Misc.TableSize(Status.Functions) == 0 then
-      Status.Functions = {
+      Status.Functions =
+      {
         [1] = function(health)
-          self:TriggerEvent("__zm:revivePlayer", health)
+          self.TriggerEvent("__zm:revivePlayer", health)
         end
       }
     end
@@ -137,7 +138,7 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
   end
 
   self.AddItem = function(item, quantity)
-    local playerInventory, playerName = self:GetInventory(), self:GetBaseName()
+    local playerInventory, playerName = self.GetInventory(), self.GetBaseName()
 
     quantity = tonumber(quantity)
 
@@ -148,7 +149,7 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
     end
 
     if ZMan.Items[item] ~= nil then
-      self:ShowNotification("success", "Inventory", ("Added (x%s) %s"):format(quantity, ZMan.Items[item].label))
+      self.ShowNotification("success", "Inventory", ("Added (x%s) %s"):format(quantity, ZMan.Items[item].label))
 
       if playerInventory[item] == nil then
         playerInventory[item] = quantity
@@ -156,13 +157,13 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
         playerInventory[item] = tonumber(playerInventory[item]) + quantity
       end
     else
-      self:ShowNotification("error", "Inventory", ("Item (%s) is invalid!"):format(item))
+      self.ShowNotification("error", "Inventory", ("Item (%s) is invalid!"):format(item))
       Utils.Logger.Error(("%s tried to spawn an invalid item! (%s)"):format(playerName, item))
     end
   end
 
   self.RemoveItem = function(item, quantity)
-    local playerIdentifier, playerInventory, playerName = self:GetIdentifier(), self:GetInventory(), self:GetBaseName()
+    local playerIdentifier, playerInventory, playerName = self.GetIdentifier(), self.GetInventory(), self.GetBaseName()
 
     quantity = tonumber(quantity)
 
@@ -179,27 +180,30 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
     if ZMan.Items[item] ~= nil then
       if playerInventory[item] ~= nil then
         playerInventory[item] = nil
-        self:ShowNotification("success", "Inventory", ("Removed (x%s) %s"):format(quantity, ZMan.Items[item]))
+        self.ShowNotification("success", "Inventory", ("Removed (x%s) %s"):format(quantity, ZMan.Items[item]))
 
         CreateDrop(item, { quantity = quantity })
       end
     else
-      self:ShowNotification("error", "Inventory", ("Item (%s) is invalid!"):format(item))
+      self.ShowNotification("error", "Inventory", ("Item (%s) is invalid!"):format(item))
       Utils.Logger.Error(("%s tried to remove an invalid item! (%s)"):format(playerName, item))
     end
   end
 
   self.SetJob = function(job)
-    self.job = job
+    if job ~= nil and ZMan.Jobs[job] then
+      self.job = job
+    end
   end
 
+  -- TODO: Test this
   self.SetGroup = function(group)
     if group ~= nil and Config.Groups[group] then
-      ExecuteCommand(("remove_principal identifier.license:%s zman.groups.%s"):format(self:GetIdentifier(), self:GetGroup()))
+      ExecuteCommand(("remove_principal identifier.license:%s zman.groups.%s"):format(self.GetIdentifier(), self.GetGroup())) -- Remove old group
+      ExecuteCommand(("add_principal identifier.license:%s zman.groups.%s"):format(self.GetIdentifier(), group)) -- Add new group
       self.group = group
-      ExecuteCommand(("add_principal identifier.license:%s zman.groups.%s"):format(self:GetIdentifier(), group))
     else
-      Utils.Logger.Error(("Group ~red~%s~white~ does not exist in ~lblue~Groups ~white~table! (Check ~yellow~Config.lua~white~)"):format(group), true)
+      Utils.Logger.Error(("Group ~red~%s~white~ does not exist in ~lblue~Groups ~white~table! (Check ~yellow~%s/config.lua~white~)"):format(group, GetCurrentResourceName()), true)
     end
   end
 

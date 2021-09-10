@@ -19,9 +19,9 @@ AddEventHandler(
   function()
     SetEntityCoords(
       PlayerPedId(),
-      Config.SpawnLocation.x, -- ZMan.Player.Data.last_location[1]
-      Config.SpawnLocation.y, -- ZMan.Player.Data.last_location[2]
-      Config.SpawnLocation.z, -- ZMan.Player.Data.last_location[3]
+      ZMan.Player.Data.last_location[1],
+      ZMan.Player.Data.last_location[2],
+      ZMan.Player.Data.last_location[3],
       false,
       false,
       false,
