@@ -22,9 +22,9 @@ ZMan.Instantiate = function(src, inv, ident, pos, group)
     ZMan.Players[src] = Player
 
     -- Not sure if I have to add principal everytime a player joins?
-    --ExecuteCommand(('add_principal identifier.license:%s group.%s'):format(Player:GetIdentifier(), Player:GetGroup()))
+    --ExecuteCommand(('add_principal identifier.license:%s group.%s'):format(Player.GetIdentifier(), Player.GetGroup()))
 
-    Utils.Logger.Info(("New player instantiated ~green~(%s)~white~ => ~green~%s"):format(Player:GetBaseName(), src))
+    Utils.Logger.Info(("New player instantiated ~green~(%s)~white~ => ~green~%s"):format(Player.GetBaseName(), src))
 
     return Player
   end
@@ -220,6 +220,8 @@ ZMan.Mods.Stop = function(mod)
     Utils.Logger.Info(("Successfuly ~red~stopped~white~ a module => ~green~(%s)"):format(mod), true)
   end
 end
+
+ZMan.Database = MySQL.Async
 
 Mod = ZMan.LoadMod
 

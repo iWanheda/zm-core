@@ -13,12 +13,7 @@ loadscreen_manual_shutdown 'yes'
 
 files {
   'includes.lua', -- So we can use our Object without the need of triggering events
-
-	'html/**/*.js',
-	'html/**/*.css',
-	'html/**/*.png',
-	'html/**/*.mp3',
-	'html/*.html'
+	'html/**'
 }
 
 client_scripts {

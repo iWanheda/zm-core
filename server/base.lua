@@ -6,6 +6,9 @@ MySQL.ready(
   end
 )
 
+Utils.Logger.Info("ZimaN Framework, developed with ❤️")
+Utils.Logger.Debug("❗ Debug mode is active! This will spam a lot in your server/client's console.")
+
 Citizen.CreateThread(
   function()
     if Config.Queue and GetResourceState("hardcap") == "started" then
@@ -15,10 +18,7 @@ Citizen.CreateThread(
     while not MySQLInit do
       Citizen.Wait(1)
     end
-
-    Utils.Logger.Info("ZimaN Framework, developed with ❤️")
-    Utils.Logger.Debug("❗ Debug mode is active! This will spam a lot in your server/client's console.")
-
+    
     for k, v in pairs(Config.Items) do
       ZMan.AddItem(k, { label = v.label, weight = v.weight, exclusive = v.exclusive })
     end
@@ -70,7 +70,7 @@ AddEventHandler(
     local Player = ZMan.Get(source)
 
     if Player then
-      Player:SavePlayer()
+      Player.SavePlayer()
       ZMan.Destroy(source)
     end
   end
@@ -112,9 +112,9 @@ AddEventHandler(
 
           local Player = ZMan.Instantiate(_source, res[1].inventory, res[1].identity, res[1].last_location, res[1].group)
 
-          Utils.Logger.Debug(("Great! We've got %s's info!"):format(Player:GetBaseName()))
+          Utils.Logger.Debug(("Great! We've got %s's info!"):format(Player.GetBaseName()))
 
-          Player:UpdatePlayer(
+          Player.UpdatePlayer(
             {
               last_location = res[1].last_location,
               identity = res[1].identity,
@@ -130,7 +130,7 @@ AddEventHandler(
           MySQL.Async.execute(
             "INSERT INTO users VALUES(@id, @identity, @customization, @job, @group, @grade, @inv, @last_location)",
             {
-              ["@id"] = Player:GetIdentifier(),
+              ["@id"] = Player.GetIdentifier(),
               ["@identity"] = json.encode(
                 {
                   first_name = nil,
@@ -145,13 +145,13 @@ AddEventHandler(
               ["@last_location"] = json.encode(Config.SpawnLocation)
             },
             function()
-              Utils.Logger.Debug(("Added ~green~%s~white~ to the database!"):format(Player:GetBaseName()))
+              Utils.Logger.Debug(("Added ~green~%s~white~ to the database!"):format(Player.GetBaseName()), true)
             end
           )
         end
 
         local Player = ZMan.Get(_source)
-        Player:ShowNotification("success", Config.ServerName, ("Welcome %s!"):format(Player:GetBaseName()))
+        Player.ShowNotification("success", Config.ServerName, ("Welcome %s!"):format(Player.GetBaseName()))
       end
     )
   end
@@ -163,10 +163,10 @@ ZMan.RegisterCommand(
     local Player, itemName, itemQuant = ZMan.Get(source), args[1], args[2]
 
     if itemName ~= nil and itemQuant ~= nil then
-      Player:AddItem(itemName, itemQuant)
+      Player.AddItem(itemName, itemQuant)
     else
       Utils.Logger.Error(("%s tried to give themself an item with wrong attributes. (Item Name: ~green~%s~white~, Item Quantity: ~green~%s~white~)")
-        :format(Player:GetBaseName(), itemName or "Undefined", itemQuant or "Undefined")
+        :format(Player.GetBaseName(), itemName or "Undefined", itemQuant or "Undefined")
       )
     end
   end, false
@@ -177,16 +177,6 @@ ZMan.RegisterCommand(
   function(source, args)
     local Player = ZMan.Get(source)
 
-    Player:SetStatus(Status.Health, 200)
+    Player.SetStatus(Status.Health, 200)
   end, false
 )
-
-Citizen.CreateThread(function()
-  Wait(1500) -- Wait for the table to be filled
-
-  for k, v in pairs(ZMan.GetPlayers()) do
-    local Player = ZMan.Get(k) -- Get the player instance
-
-    print(Player:GetIdentifier()) -- Prints the identifier, works fine.
-  end
-end)

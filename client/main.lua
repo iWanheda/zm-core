@@ -19,9 +19,9 @@ AddEventHandler(
   function()
     SetEntityCoords(
       PlayerPedId(),
-      ZMan.Player.Data.last_location[1],
-      ZMan.Player.Data.last_location[2],
-      ZMan.Player.Data.last_location[3],
+      Config.SpawnLocation.x, -- ZMan.Player.Data.last_location[1]
+      Config.SpawnLocation.y, -- ZMan.Player.Data.last_location[2]
+      Config.SpawnLocation.z, -- ZMan.Player.Data.last_location[3]
       false,
       false,
       false,
@@ -31,7 +31,7 @@ AddEventHandler(
 )
 
 Citizen.CreateThread(function()
-  Utils.Logger.Debug(("Changing Player's ped to: %s"):format(pedModel))
+  Utils.Logger.Debug(("Changing Player's ped to: ~green~%s"):format(pedModel))
 
   -- If Data still hasn't been loaded into memory, let's wait.
   while Utils.Misc.TableSize(ZMan.Player.Data) == 0 do
