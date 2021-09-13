@@ -6,10 +6,10 @@ Utils.Game =
     SetBlipSprite(mapBlip, data.Sprite)
     SetBlipDisplay(mapBlip, 4)
 
-    SetBlipScale(mapBlip, data.Scale)
+    SetBlipScale(mapBlip, data.Scale or 0.8)
     SetBlipColour(mapBlip, data.Color)
 
-    SetBlipAsShortRange(mapBlip, data.ShortRange)
+    SetBlipAsShortRange(mapBlip, data.ShortRange or true)
 
     BeginTextCommandSetBlipName("STRING")
     AddTextComponentSubstringPlayerName(data.Label)

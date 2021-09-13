@@ -110,7 +110,7 @@ AddEventHandler(
             res[1].group = Config.DefaultGroup
           end
 
-          local Player = ZMan.Instantiate(_source, res[1].inventory, res[1].identity, res[1].last_location, res[1].group)
+          local Player = ZMan.Instantiate(_source, res[1].inventory, res[1].identity, res[1].last_location, res[1].job, res[1].grade, res[1].group)
 
           Utils.Logger.Debug(("Great! We've got %s's info!"):format(Player.GetBaseName()))
 
@@ -125,7 +125,7 @@ AddEventHandler(
 
           TriggerClientEvent("__zm:playerLoaded", _source)
         else
-          local Player = ZMan.Instantiate(_source, {}, {}, {}, "regular")
+          local Player = ZMan.Instantiate(_source, {}, {}, {}, nil, 0, "regular")
 
           MySQL.Async.execute(
             "INSERT INTO users VALUES(@id, @identity, @customization, @job, @group, @grade, @inv, @last_location)",

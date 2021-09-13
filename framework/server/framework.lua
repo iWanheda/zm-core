@@ -6,6 +6,7 @@ ZMan.Players = { }
 ZMan.Items = { }
 ZMan.Jobs = { }
 ZMan.Commands = { }
+ZMan.Callbacks = { }
 
 ZMan.Mods = { }
 
@@ -15,10 +16,10 @@ ZMan.Mods.Excluded = 0
 
 -- Player management
 
-ZMan.Instantiate = function(src, inv, ident, pos, group)
+ZMan.Instantiate = function(src, inv, ident, pos, job, grade, group)
   if ZMan.Players[src] == nil then
     -- Append new Player instance to player list
-    local Player = CPlayer.Create(src, inv, ident, pos, group)
+    local Player = CPlayer.Create(src, inv, ident, pos, job, grade, group)
     ZMan.Players[src] = Player
 
     -- Not sure if I have to add principal everytime a player joins?
@@ -116,7 +117,7 @@ ZMan.RegisterCommand = function(cmd, cb, console, group)
   if cmd ~= nil and cmd ~= "" then
     if type(group) == "table" then
       for k, v in pairs(group) do
-        ExecuteCommand(("add_ace zman.groups.%s zman.cmds.%s allow"):format(v or "regular", cmd))
+        ExecuteCommand(("add_ace zman.groups.%s zman.cmds.%s allow"):format(v, cmd))
       end
     end
 
@@ -233,3 +234,30 @@ Mod("police")
 -- In case you want to stop a module in real time, not sure if it's possible yet, but should be.
 -- All we need is to unload the file from memory
 ZMan.Mods.Stop("police")
+
+-- Callback Handler
+
+ZMan.RegisterCallback = function(name, cb)
+  if ZMan.Callbacks[name] ~= nil then
+    Utils.Logger.Warn(("There already exists a server callback named ~green~(%s)"):format(name))
+    return
+  else
+    ZMan.Callbacks[name] = cb
+    Utils.Logger.Debug(("Registered a new server callback ~green~(%s)"):format(name), true)
+  end
+end
+
+RegisterNetEvent("__zm:server:callback:trigger")
+AddEventHandler("__zm:server:callback:trigger", function(name, id, ...)
+  local _source = source
+
+  if ZMan.Callbacks[name] ~= nil then
+    ZMan.Callbacks[name](_source, function(...)
+      TriggerClientEvent('__zm:client:callback:return', _source, id, ...)
+    end, ...)
+    
+    Utils.Logger.Debug(("%s triggered a server callback (%s) [%s]"):format(source, name, json.encode(...))) -- Dump?
+  else
+    Utils.Logger.Warn(("Callback ~red~(%s)~white~ does not exist in ~lblue~Callback~white~ table!"):format(name))
+  end
+end)

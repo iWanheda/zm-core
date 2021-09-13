@@ -17,7 +17,7 @@ Utils.Game.Input =
 
   Binds = { },
 
-  BindKey = function(key, command, fn, desc)
+  BindKey = function(key, command, fn, desc, inputtype)
     Utils.Game.Input.Binds[command] = fn
 
     RegisterCommand(
@@ -28,19 +28,10 @@ Utils.Game.Input =
       false
     )
 
-    RegisterKeyMapping(("%s"):format(command), desc or "", "keyboard", key)
+    RegisterKeyMapping(("%s"):format(command), desc or "", inputtype or "keyboard", key)
   end,
 
   GetBindFn = function(command)
     return Utils.Game.Input.Binds[command]
   end
 }
-
--- TODO:
--- Pass the function automatically so we don't have to fucking check it manually.
--- Hello future me you lazy fuck, do this and stop laying down 24/7 you moron.
--- WTF is this keymap system am I stupid?? Re-do this.
-
-Utils.Game.Input.BindKey("f1", "test", function()
-  print(123)
-end, "Cona")

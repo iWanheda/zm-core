@@ -1,5 +1,7 @@
 ZMan = { }
 
+ZMan.Callbacks = { }
+
 -- So that we can store local player's ped in a variable and avoid
 --  calling it multiple times
 local _playerPedId = PlayerPedId()
@@ -15,13 +17,13 @@ ZMan.Player.UpdateData = function(key, value)
 end
 
 ZMan.Player.Teleport = function(pos)
-  DoScreenFadeIn(800)
-
-  SetEntityCoords(
-    PlayerPedId(),
-    pos.x, pos.y, pos.z,
-    true, true, false, false
-  )
+  ZMan.Utils.Game.Misc.ScreenFade(function()
+    SetEntityCoords(
+      PlayerPedId(),
+      pos.x, pos.y, pos.z - 0.3,
+      true, true, false, false
+    )
+  end, 800)
 end
 
 ZMan.Player.ShowNotification = function(type, cap, message, time)
@@ -68,3 +70,19 @@ AddEventHandler(
     NetworkResurrectLocalPlayer(playerPos.x, playerPos.y, playerPos.z, h, false, false)
   end
 )
+
+ZMan.CallbackID = 0
+-- Callback Handler
+-- Server callback only
+ZMan.Callback = function(name, cb, ...)
+  ZMan.Callbacks[ZMan.CallbackID] = cb
+  TriggerServerEvent("__zm:server:callback:trigger", name, ZMan.CallbackID, ...)
+
+  ZMan.CallbackID = ZMan.CallbackID + 1
+end
+
+RegisterNetEvent("__zm:client:callback:return")
+AddEventHandler("__zm:client:callback:return", function(id, ...)
+	ZMan.Callbacks[id](...)
+	ZMan.Callbacks[id] = nil
+end)

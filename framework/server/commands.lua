@@ -13,6 +13,17 @@ ZMan.RegisterCommand(
 )
 
 ZMan.RegisterCommand(
+  "info",
+  function(source, args)
+    local Player = ZMan.Get(source)
+
+    print(("Job: %s | Grade: %s | Group: %s | Identity: %s %s"):format(
+      Player.GetJob(), Player.GetJobGrade(), Player.GetGroup(), Player.GetName().first, Player.GetName().last
+    ))
+  end, false
+)
+
+ZMan.RegisterCommand(
   "setgroup",
   function(source, args)
     local targetSource, targetGroup = tonumber(args[1]), args[2]

@@ -8,7 +8,7 @@ Status.Functions = { }
 Status.Health = 1
 
 -- Create our actual Player instance
-function CPlayer.Create(src, inventory, identity, last_location, job, group)
+function CPlayer.Create(src, inventory, identity, last_location, job, grade, group)
   local self = setmetatable({ }, CPlayer)
 
   local playerInv = json.decode(inventory)
@@ -30,6 +30,8 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
   self.spawn = json.decode(last_location)
 
   self.job = job
+  self.grade = grade
+
   self.group = group
 
   -- Methods
@@ -66,6 +68,10 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
     return self.age
   end
 
+  self.GetOutfit = function()
+    return {}
+  end
+
   self.GetBaseName = function()
     return GetPlayerName(self.src)
   end
@@ -75,7 +81,14 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
   end
 
   self.GetJob = function()
-    return ZMan.GetJob(self.job)
+    if self.job ~= nil then
+      return ZMan.GetJob(self.job)
+    end
+  end
+
+  -- change this
+  self.GetJobGrade = function()
+    return self.grade
   end
 
   self.GetGroup = function()
@@ -111,14 +124,25 @@ function CPlayer.Create(src, inventory, identity, last_location, job, group)
     local x, y, z, h = playerPos.x, playerPos.y, playerPos.z, GetEntityHeading(GetPlayerPed(self.src))
 
     MySQL.Async.execute(
-      "UPDATE users SET last_location = @last_location, inventory = @inv WHERE identifier = @id",
+      "UPDATE users SET last_location = @last_location, inventory = @inv, job = @job, grade = @grade, `group` = @group, customization = @customization, identity = @identity WHERE identifier = @id",
       {
+        ["@id"] = playerIdentifier,
+
         ["@last_location"] = json.encode({ x, y, z, h }),
         ["@inv"] = json.encode(playerInventory),
-        ["@id"] = tostring(playerIdentifier)
+        ["@job"] = self.GetJob(),
+        ["@grade"] = self.GetJobGrade(),
+        ["@group"] = self.GetGroup(),
+        ["@customization"] = json.encode(self.GetOutfit()),
+        ["@identity"] = json.encode(self.GetName())
       },
       function() end
     )
+  end
+
+  self.SetName = function(first, last)
+    self.firstname = first
+    self.lastname = last
   end
 
   self.SetStatus = function(status, value)

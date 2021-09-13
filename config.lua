@@ -25,7 +25,6 @@ Config =
     crypto = 0
   },
 
-  Identifier = "license",
   BanType = "TOKEN",
 
   -- Static Data
