@@ -38,13 +38,17 @@ Utils.Game.RayCastGameplayCamera = function(distance)
     z = cameraCoord.z + direction.z * distance 
   }
 
-  local rayShape = StartShapeTestRay(
+  local rayShape = StartExpensiveSynchronousShapeTestLosProbe(
     cameraCoord.x, cameraCoord.y, cameraCoord.z,
     destination.x, destination.y, destination.z,
     1 | 2 | 16, 0, 4
   )
 
   local a, b, c, d, e = GetShapeTestResult(rayShape)
+
+  if e then
+    et = GetEntityType(e)
+  end
 
   return b, c, e
 end

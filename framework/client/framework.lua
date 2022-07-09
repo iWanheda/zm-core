@@ -1,6 +1,7 @@
 ZMan = { }
 
 ZMan.Callbacks = { }
+ZMan.RegisteredCallbacks = { }
 
 -- So that we can store local player's ped in a variable and avoid
 --  calling it multiple times
@@ -9,11 +10,22 @@ ZMan.Ped = _playerPedId
 
 ZMan.Player = { }
 ZMan.Player.Data = { }
+ZMan.Items = Config.Items
 
 -- Local Player
 
 ZMan.Player.UpdateData = function(key, value)
   ZMan.Player.Data[tostring(key)] = json.decode(value)
+end
+
+ZMan.Player.GetData = function(key)
+  if ZMan.Player.Data[tostring(key)] ~= nil then
+    return ZMan.Player.Data[tostring(key)]
+  end
+end
+
+ZMan.Player.Position = function()
+  return GetEntityCoords(PlayerPedId())
 end
 
 ZMan.Player.Teleport = function(pos)
@@ -37,6 +49,17 @@ ZMan.Player.ShowNotification = function(type, cap, message, time)
     exports.swt_notifications:Negative(cap or "", message or "", "top", time or 2500, true)
   end
 end
+
+-- Test
+--ZMan.Player.RegisterCallback(name, callback, ...)
+--  if name ~= nil then
+--    if ZMan.RegisteredCallbacks[name] ~= nil then
+--      ZMan.RegisteredCallbacks[name] = callback(...)
+--    else
+--      Utils.Logger.Warn(("There's already a ~lblue~callback~white~ registered with that name! ~green~(%s)"):format(name))
+--    end
+--  end
+--end
 
 RegisterNetEvent("__zm:sendNotification")
 AddEventHandler(
@@ -85,4 +108,69 @@ RegisterNetEvent("__zm:client:callback:return")
 AddEventHandler("__zm:client:callback:return", function(id, ...)
 	ZMan.Callbacks[id](...)
 	ZMan.Callbacks[id] = nil
+end)
+
+--ZMan.Menu.Create = function(title, data, cb)
+--  local menu = CMenu.Create(title)
+--  
+--  if menu then
+--    return menu
+--  end
+--end
+
+--local Menu = ZMan.Menu.Create("Example", menuData, function(opt)
+--  if s.option == 1 then
+--    print(1)
+--  end
+--end, true)
+
+local dropTable = { }
+
+RegisterNetEvent("__zm:internal:drop:create")
+AddEventHandler("__zm:internal:drop:create", function(props)
+  Citizen.CreateThread(function()
+    -- To test
+    local drop = table.insert(dropTable, props)
+
+    Citizen.Wait(Config.DropRemoval * 1000)
+    table.remove(dropTable, drop)
+  end)
+end)
+
+Citizen.CreateThread(function()
+  local waitMs = 500
+
+  while true do
+    Citizen.Wait(waitMs)
+    local playerPos = ZMan.Player.Position()
+
+    -- Check if we're near any drops
+    for k, v in pairs(dropTable) do
+      local dropCoords = vector3(v.position.x, v.position.y, v.position.z - 0.98)
+
+      if #(playerPos - dropCoords) < 10.0 then
+        local markerAlpha = math.floor(-50.1 * (#(playerPos - dropCoords)) + 255)
+        waitMs = 0
+
+        DrawMarker(
+          25, dropCoords,
+          0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0,
+          0.2, 0.2, 0.2,
+          255, 180, 0, markerAlpha >= 0 and markerAlpha or 0,
+          false, false, false, false, nil, nil, false
+        )
+        DrawMarker(
+          25, dropCoords,
+          0.0, 0.0, 0.0,
+          0.0, 0.0, 0.0,
+          0.3, 0.3, 0.3,
+          110, 0, 255, markerAlpha >= 0 and markerAlpha or 0,
+          false, false, false, false, nil, nil, false
+        )
+      else
+        waitMs = 500
+      end
+    end
+  end
 end)

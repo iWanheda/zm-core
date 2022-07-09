@@ -97,12 +97,13 @@ RegisterCommand(
       local hash = GetHashKey(args[1])
       RequestModel(hash)
 
-      if not HasModelLoaded(hash) then
+      while not HasModelLoaded(hash) do
         Citizen.Wait(1)
       end
 
       local x, y, z = GetEntityCoords(PlayerPedId())
-      CreateVehicle(hash, x, y, z, 0.0, true, false)
+      local vehicle = CreateVehicle(hash, x, y, z, 0.0, true, false)
+      SetPedIntoVehicle(PlayerPedId(), vehicle, -1)
     end
   end
 )

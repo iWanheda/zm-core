@@ -39,3 +39,30 @@ ZMan.RegisterCommand(
     end
   end, true, { "admin" }
 )
+
+ZMan.RegisterCommand(
+  "showinv",
+  function(source, args)
+    local Player = ZMan.Get(source)
+
+    print(json.encode(Player.GetInventory()))
+  end, false
+)
+
+ZMan.RegisterCommand(
+  "additem",
+  function(source, args)
+    local Player = ZMan.Get(source)
+
+    Player.AddItem(args[1], args[2])
+  end, false
+)
+
+ZMan.RegisterCommand(
+  "removeitem",
+  function(source, args)
+    local Player = ZMan.Get(source)
+
+    Player.RemoveItem(args[1], 1)
+  end, false
+)

@@ -36,12 +36,11 @@ AddEventHandler(
 )
 
 if Config.SpawnPeds == false then
+  -- todo: onesync_population false ?
   AddEventHandler(
-    "entityCreating",
-    function(ent)
-      if GetEntityPopulationType(ent) ~= 7 then
-        CancelEvent()
-      end
+    "populationPedCreating",
+    function()
+      CancelEvent()
     end
   )
 end
@@ -57,12 +56,59 @@ AddEventHandler(
   end
 )
 
-AddEventHandler(
-  "playerConnecting",
-  function(name, kickReason, def)
-    Utils.Logger.Info(("~green~%s~white~ is connecting to the server."):format(name))
+local tempPlayers = { }
+
+AddEventHandler("playerConnecting", function(name, kickReason, def)
+  local source = source
+  local identifier, identifiers = nil, GetPlayerIdentifiers(source)
+
+  def.defer()
+  Wait(0)
+
+  for _, v in pairs(identifiers) do
+    if string.find(v, Config.Identifier or "license") then
+      identifier = v:sub(9)
+      break
+    end
   end
-)
+
+  if not identifier then
+    def.done((
+      "There was an error getting your identifier (%s), please report this to the system administrator."
+    ):format(Config.Identifier))
+  end
+
+  def.update(("Checking %s's status..."):format(name))
+
+  MySQL.Async.fetchAll(
+    "SELECT * FROM users WHERE identifier = @id",
+    {
+      ["@id"] = identifier
+    },
+    function(res)
+      Utils.Logger.Info(("~green~%s~white~ is connecting to the server."):format(name))
+      if res and res[1] ~= nil then
+        if res[1].banned ~= false then
+          def.done(("You have been banned from this server! (%s)"):format(name))
+          return
+        end
+      else
+        MySQL.Async.execute(
+          "INSERT INTO users VALUES(@id, @group, false)",
+          {
+            ["@id"] = identifier,
+            ["@group"] = Config.DefaultGroup,
+          },
+          function()
+            Utils.Logger.Debug(("Added ~green~%s~white~ to the database!"):format(name), true)
+          end
+        )
+      end
+      tempPlayers[source] = identifier
+      def.done()
+    end
+  )
+end)
 
 AddEventHandler(
   "playerDropped",
@@ -76,86 +122,88 @@ AddEventHandler(
   end
 )
 
-Citizen.CreateThread(
-  function()
-    while true do
-      Citizen.Wait(Config.AutoSaveTime * 60000)
-
-      for k, v in pairs(ZMan.GetPlayers()) do
+Citizen.CreateThread(function()
+  while true do
+    Citizen.Wait(Config.AutoSaveTime * 60000)
+    
+    for k, v in pairs(ZMan.GetPlayers()) do
+      -- Asynchronous
+      Citizen.CreateThread(function()
         ZMan.Get(k):SavePlayer()
-      end
+      end)
     end
   end
-)
+end)
+
+-- TODO: REMOVE CHOICE OF MULTI CHARACTER, IT'S FORCED TO BE TRUE!
+-- FIX: Remove all this shit changes and apply the multi character system! :]
 
 -- This also prevents the table from getting empty upon a script restart
+
+-- TODO: UpdatePlayer everytime we instantiate a new Player, fix some bugs and improve this overall!
 RegisterNetEvent("__zm:joined")
-AddEventHandler(
-  "__zm:joined",
-  function()
-    local _source = source
-
-    if ZMan.Players[source] ~= nil then
-      return -- Use this to avoid event spammers (with cheats)
-    end
-
-    MySQL.Async.fetchAll(
-      "SELECT * FROM users WHERE identifier = @id",
-      {
-        ["@id"] = GetPlayerIdentifier(_source, 0):sub(9)
-      },
-      function(res)
-        if res and res[1] ~= nil then
-          if res[1].group and Config.Groups[res[1].group] == nil then
-            res[1].group = Config.DefaultGroup
-          end
-
-          local Player = ZMan.Instantiate(_source, res[1].inventory, res[1].identity, res[1].last_location, res[1].job, res[1].grade, res[1].group)
-
-          Utils.Logger.Debug(("Great! We've got %s's info!"):format(Player.GetBaseName()))
-
-          Player.UpdatePlayer(
-            {
-              last_location = res[1].last_location,
-              identity = res[1].identity,
-              job = res[1].job, -- TODO: Send Job object
-              group = res[1].group
-            }
-          )
-
-          TriggerClientEvent("__zm:playerLoaded", _source)
-        else
-          local Player = ZMan.Instantiate(_source, {}, {}, {}, nil, 0, "regular")
-
-          MySQL.Async.execute(
-            "INSERT INTO users VALUES(@id, @identity, @customization, @job, @group, @grade, @inv, @last_location)",
-            {
-              ["@id"] = Player.GetIdentifier(),
-              ["@identity"] = json.encode(
-                {
-                  first_name = nil,
-                  last_name = nil
-                }
-              ),
-              ["@customization"] = json.encode({}),
-              ["@job"] = json.encode({}),
-              ["@group"] = Config.DefaultGroup,
-              ["@grade"] = 0,
-              ["@inv"] = json.encode(Config.DefaultInventory),
-              ["@last_location"] = json.encode(Config.SpawnLocation)
-            },
-            function()
-              Utils.Logger.Debug(("Added ~green~%s~white~ to the database!"):format(Player.GetBaseName()), true)
-            end
-          )
+AddEventHandler("__zm:joined", function()
+  -- Because we reload the script a lot of times :')
+  if Config.Debug then
+    if tempPlayers[source] == nil then
+      local identifier, identifiers = nil, GetPlayerIdentifiers(source)
+  
+      for _, v in pairs(identifiers) do
+        if string.find(v, Config.Identifier or "license") then
+          identifier = v:sub(9) -- Sanitize the license, delete the <license:>
+          break
         end
-
-        local Player = ZMan.Get(_source)
-        Player.ShowNotification("success", Config.ServerName, ("Welcome %s!"):format(Player.GetBaseName()))
       end
-    )
+      tempPlayers[source] = identifier
+    end
   end
-)
+
+  if ZMan.Players[source] ~= nil then
+    return -- Use this to avoid event spammers (with cheats)
+  end
+
+  local _source, characters = source, { }
+
+  -- Send NUI to player (5 characters to choose from)
+end)
+
+-- THIS IS W.I.P FOR THE CHARACTERS!
+RegisterNetEvent("__zm:internal:chars:choose")
+AddEventHandler("__zm:internal:chars:choose", function(data)
+  local _source = source
+
+  if data and data.citizenId ~= nil then
+    print("citizen id")
+  elseif data and data.firstName and data.lastName and data.dateBirth and data.charGender then
+    ZMan.Database.fetchAll("SELECT citizenid FROM user_characters WHERE identifier = @id",
+      {
+        ["@id"] = tempPlayers[_source]
+      }, function(res)
+      if res then 
+        if #res > 5 then
+          return
+        else
+          ZMan.Database.execute("INSERT INTO user_characters VALUES(@citizenid, @identifier, @identity, @last_location, @inventory, @customization, @job, @grade)",
+          {
+            ["@citizenid"] = Utils.Management.GenCitizenId(),
+            ["@identifier"] = tempPlayers[_source],
+            ["@identity"] = json.encode({ first = data.firstName, last = data.lastName, dob = data.dateBirth, gender = data.charGender }),
+            ["@last_location"] = json.encode({}),
+            ["@inventory"] = json.encode(Config.DefaultInventory),
+            ["@customization"] = json.encode({}), -- todo: show customization screen upon creating char
+            ["@job"] = json.encode(nil),
+            ["@grade"] = 0
+          })
+
+          tempPlayers[_source] = nil
+
+          -- TODO: Fix group
+          ZMan.Instantiate(_source, citizenId, Config.DefaultInventory, { first = data.firstName, last = data.lastName, dob = data.dateBirth, gender = data.charGender }, {}, nil, 0, "admin")
+        end
+      end
+    end)
+  end
+end)
 
 ZMan.RegisterCommand(
   "giveitem",
@@ -165,7 +213,7 @@ ZMan.RegisterCommand(
     if itemName ~= nil and itemQuant ~= nil then
       Player.AddItem(itemName, itemQuant)
     else
-      Utils.Logger.Error(("%s tried to give themself an item with wrong attributes. (Item Name: ~green~%s~white~, Item Quantity: ~green~%s~white~)")
+      Utils.Logger.Error(("%s tried to give themselves an item with wrong attributes. (Item Name: ~green~%s~white~, Item Quantity: ~green~%s~white~)")
         :format(Player.GetBaseName(), itemName or "Undefined", itemQuant or "Undefined")
       )
     end

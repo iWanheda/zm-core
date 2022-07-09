@@ -1,12 +1,14 @@
 ZMan = { }
 
 ZMan.Resource = GetCurrentResourceName() -- Let's cache it! :]
+ZMan.Database = MySQL.Async
 
 ZMan.Players = { }
 ZMan.Items = { }
 ZMan.Jobs = { }
 ZMan.Commands = { }
 ZMan.Callbacks = { }
+ZMan.Drops = { }
 
 ZMan.Mods = { }
 
@@ -16,14 +18,14 @@ ZMan.Mods.Excluded = 0
 
 -- Player management
 
-ZMan.Instantiate = function(src, inv, ident, pos, job, grade, group)
+ZMan.Instantiate = function(src, cid, inv, ident, pos, job, grade, group)
   if ZMan.Players[src] == nil then
     -- Append new Player instance to player list
-    local Player = CPlayer.Create(src, inv, ident, pos, job, grade, group)
+    local Player = CPlayer.Create(src, cid, inv, ident, pos, job, grade, group)
     ZMan.Players[src] = Player
 
     -- Not sure if I have to add principal everytime a player joins?
-    --ExecuteCommand(('add_principal identifier.license:%s group.%s'):format(Player.GetIdentifier(), Player.GetGroup()))
+    --ExecuteCommand(("add_principal identifier.license:%s group.%s"):format(Player.GetIdentifier(), Player.GetGroup()))
 
     Utils.Logger.Info(("New player instantiated ~green~(%s)~white~ => ~green~%s"):format(Player.GetBaseName(), src))
 
@@ -55,7 +57,20 @@ ZMan.Get = function(src)
   Utils.Logger.Debug(("Cannot get ~green~%s's~white~ object! Doesn't exist on ~lblue~Players~white~ table!"):format(src))
 end
 
-ZMan.GetPlayers = function()
+ZMan.GetPlayers = function(job)
+  if job ~= nil then
+    if ZMan.Jobs[job] ~= nil then
+      local _Players = { }
+
+      for k, v in pairs(ZMan.Players) do
+        if v.GetJob() == job then
+          table.insert(_Players, v)
+        end
+      end
+    end
+
+    return _Players
+  end
   return ZMan.Players
 end
 
@@ -78,7 +93,7 @@ ZMan.AddItem = function(item, options)
 		ZMan.Items[item] = options
 		-- Add to database
 	else
-		Utils.Logger.Error(('Cannot add item ~green~%s~white~ because it has invalid options! Label: ~green~%s~white~ Weight: ~green~%s~white~ Exclusive: ~green~%s'):format(
+		Utils.Logger.Error(("Cannot add item ~green~%s~white~ because it has invalid options! Label: ~green~%s~white~ Weight: ~green~%s~white~ Exclusive: ~green~%s"):format(
 			item, options.label or "Not Defined", options.weight or "Not Defined", options.exclusive or "Not Defined"
 		))
 	end
@@ -107,7 +122,7 @@ ZMan.RegisterJob = function(job, data)
 		ZMan.Jobs[job] = data
 		Utils.Logger.Debug(("Added job ~green~(%s)~white~ to the Jobs list!"):format(job))
 	else
-		Utils.Logger.Error(('Cannot add job ~green~(%s)~white~ because it has invalid options! Label: ~green~%s~white~ Grades: ~green~%s'):format(job, data.label or "Not Defined", data.grades or "Not Defined"))
+		Utils.Logger.Error(("Cannot add job ~green~(%s)~white~ because it has invalid options! Label: ~green~%s~white~ Grades: ~green~%s"):format(job, data.label or "Not Defined", data.grades or "Not Defined"))
 	end
 end
 
@@ -143,9 +158,9 @@ end
 local Module = ZMan.Modules["main"]
 Module.Category = { }
 
-local moduleList = json.decode(LoadResourceFile(ZMan.Resource, "modules/modules.list.json"))
+local moduleEntryList = json.decode(LoadResourceFile(ZMan.Resource, "modules/entries.json"))
 
-for k, v in pairs(moduleList) do
+for k, v in pairs(moduleEntryList) do
   if v ~= nil and v ~= "" and type(v) ~= string then
     Module.Category[v] = json.decode(LoadResourceFile(ZMan.Resource, ("modules/%s/modules.json"):format(v)))
   else
@@ -173,7 +188,24 @@ ZMan.CreateEnvironments = function(hierarchy, cb)
     env.hierarchy = hierarchy
     env.module = { name = v, path = ("modules/%s/%s"):format(hierarchy, v) }
     env.fn = function()
-      --[[ Load Module here ]]
+      local sharedContent = LoadResourceFile(ZMan.Resource, "modules/default/ems/shared.module.lua")
+      local serverContent = LoadResourceFile(ZMan.Resource, "modules/default/ems/server.module.lua")
+      local clientContent = LoadResourceFile(ZMan.Resource, "modules/default/ems/client.module.lua")
+
+      local sharedCode, sharedErr = load(sharedContent)
+      local serverCode, serverErr = load(serverContent)
+      --local clientCode, clientErr = load(clientContent) -- Send client code
+
+      if sharedErr or serverErr then
+        return Utils.Logger.Error(
+          ("An ~red~exception~white~ was thrown while loading ~red~%s/%s~white~, stack trace: ~yellow~\n\t-> %s")
+          :format(env.name, sharedErr ~= nil and "shared.module.lua" or "server.module.lua", 
+            sharedErr ~= nil and sharedErr or serverErr)
+        )
+      end
+
+      pcall(sharedCode)
+      pcall(serverCode)
     end
 
     if envs[v] == nil then
@@ -188,7 +220,7 @@ ZMan.CreateEnvironments = function(hierarchy, cb)
   cb(envs)
 end
 
-ZMan.CreateEnvironments("party", function(mods)
+ZMan.CreateEnvironments("default", function(mods)
   ZMan.Mods.List = mods
   
   for k, v in pairs(mods) do
@@ -202,10 +234,12 @@ ZMan.CreateEnvironments("party", function(mods)
 end)
 
 ZMan.LoadMod = function(mod, hierarchy)
-  local error, modConfig = false, LoadResourceFile(ZMan.Resource, ("%s/%s/config.module.lua"):format(hierarchy, mod))
+  local error, modConfig 
+    = false, LoadResourceFile(ZMan.Resource, ("%s/%s/config.module.lua"):format(hierarchy, mod))
 
   if modConfig then
     if error then
+      -- Upload error log to a paste website and print the URL
       return Utils.Logger.Error(("There was an error loading ~lblue~(%s/%s)~white~ => ~red~https://pastebin.com/xy6H5fg"):format(hierarchy or "boot", mod), true)
     end
 
@@ -222,29 +256,27 @@ ZMan.Mods.Stop = function(mod)
   end
 end
 
-ZMan.Database = MySQL.Async
-
 Mod = ZMan.LoadMod
 
 -- Maybe use "." as the separator for path? NaMeSpAcEs
 -- This is used so we can use mod's functions in other modules
-Mod("ems")
-Mod("police")
-
--- In case you want to stop a module in real time, not sure if it's possible yet, but should be.
--- All we need is to unload the file from memory
-ZMan.Mods.Stop("police")
+--Mod("ems")
+--Mod("police")
+--
+---- In case you want to stop a module in real time, not sure if it's possible yet, but should be.
+---- All we need is to unload the file from memory
+--ZMan.Mods.Stop("police")
 
 -- Callback Handler
 
 ZMan.RegisterCallback = function(name, cb)
   if ZMan.Callbacks[name] ~= nil then
-    Utils.Logger.Warn(("There already exists a server callback named ~green~(%s)"):format(name))
-    return
+    Utils.Logger.Warn(("Replacing an existent callback ~green~(%s)~white~ from ~green~%s"):format(name, GetInvokingResource()))
   else
-    ZMan.Callbacks[name] = cb
     Utils.Logger.Debug(("Registered a new server callback ~green~(%s)"):format(name), true)
   end
+
+  ZMan.Callbacks[name] = cb
 end
 
 RegisterNetEvent("__zm:server:callback:trigger")
@@ -253,10 +285,10 @@ AddEventHandler("__zm:server:callback:trigger", function(name, id, ...)
 
   if ZMan.Callbacks[name] ~= nil then
     ZMan.Callbacks[name](_source, function(...)
-      TriggerClientEvent('__zm:client:callback:return', _source, id, ...)
+      TriggerClientEvent("__zm:client:callback:return", _source, id, ...)
     end, ...)
     
-    Utils.Logger.Debug(("%s triggered a server callback (%s) [%s]"):format(source, name, json.encode(...))) -- Dump?
+    Utils.Logger.Debug(("~green~%s ~white~triggered a server callback ~green~(%s) [%s]"):format(source, name, json.encode(...))) -- Dump?
   else
     Utils.Logger.Warn(("Callback ~red~(%s)~white~ does not exist in ~lblue~Callback~white~ table!"):format(name))
   end
