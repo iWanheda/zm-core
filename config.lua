@@ -19,7 +19,7 @@ Config =
     cookie = 5,
     water = 5
   },
-    
+  
   MoneyTypes = 
   {
     cash = 1100,
@@ -27,7 +27,7 @@ Config =
     crypto = 0
   },
 
-  Identifier = "discord",
+  Identifier = "license", -- Identifier Type: license, steam, discord, ip, live
   BanType = "token",
 
   -- Static Data
@@ -45,8 +45,8 @@ Config =
 
   Groups =
   {
-    ["admin"] = true,
-    ["moderator"] = true,
-    ["regular"] = true
+    ["admin"],
+    ["moderator"],
+    ["regular"]
   }
 }

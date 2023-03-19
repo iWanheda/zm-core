@@ -70,7 +70,7 @@ AddEventHandler("playerConnecting", function(name, kickReason, def)
   --    break
   --  end
   --end
---
+
   --if not identifier then
   --  def.done((
   --    "There was an error getting your identifier (%s), please report this to the system administrator."
@@ -146,7 +146,7 @@ AddEventHandler("__zm:joined", function()
   if Config.Debug then
     if tempPlayers[source] == nil then
       local identifier, identifiers = nil, GetPlayerIdentifiers(source)
-
+  
       for _, v in pairs(identifiers) do
         if string.find(v, Config.Identifier or "license") then
           identifier = v:sub(9) -- Sanitize the license, delete the <license:>
@@ -225,7 +225,7 @@ AddEventHandler("__zm:internal:chars:choose", function(data)
           tempPlayers[_source] = nil
 
           -- TODO: Fix group
-          ZMan.Instantiate(_source, citizenId, Config.DefaultInventory, { first = data.firstName, last = data.lastName, dob = data.dateBirth, gender = data.charGender }, {}, nil, 0, "admin")
+          --ZMan.Instantiate(_source, citizenId, Config.DefaultInventory, { first = data.firstName, last = data.lastName, dob = data.dateBirth, gender = data.charGender }, {}, nil, 0, "admin")
         end
       end
     end)

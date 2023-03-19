@@ -1,9 +1,7 @@
 local staffModeUsers = { }
 
-RegisterCommand("admin1", function(source)
+ZMan.RegisterCommand("admin", function(source)
   local Player = ZMan.Get(source)
-
-  --if not Player:IsStaff() then return end
 
   if staffModeUsers[source] ~= nil then
     staffModeUsers[source] = nil
@@ -12,4 +10,13 @@ RegisterCommand("admin1", function(source)
   end
 
   Player:TriggerEvent("__zm:client:staff:update", staffModeUsers[source] or false)
+  print(Player:GetGroup())
+end, false)
+
+RegisterCommand("goto", function(source, args)
+  local Player, Target = ZMan.Get(source), ZMan.Get(tonumber(args[1]))
+
+  if Player and Target then
+    Player:Teleport(Target:GetPosition(), 200)
+  end
 end)

@@ -3,10 +3,9 @@ game 'gta5'
 
 author 'ShahZaM </>'
 description 'Framework for FiveM'
+version 'alpha'
 
 lua54 'yes'
-
-version 'alpha'
 
 ui_page 'html/index.html'
 

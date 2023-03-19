@@ -155,7 +155,6 @@ ZMan.RegisterCommand = function(cmd, cb, console, group, suggestions)
 
     RegisterCommand(cmd, function(source, args)
       -- Sanity checks
-  
       if not console and source == 0 then
         return Utils.Logger.Warn(("Cannot execute ~green~%s~white~ from ~red~server's~white~ console"):format(cmd))
       end

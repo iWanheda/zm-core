@@ -183,8 +183,8 @@ function CPlayer:SetName(first, last)
   self.lastname = last
 end
 
-function CPlayer:Teleport(coords)
-  self:TriggerEvent("__zm:teleportPlayer", coords or GetEntityCoords(self.src))
+function CPlayer:Teleport(coords, delay)
+  self:TriggerEvent("__zm:teleportPlayer", coords or GetEntityCoords(self.src), delay)
 end
 
 --[[

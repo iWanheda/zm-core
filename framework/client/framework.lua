@@ -28,14 +28,14 @@ ZMan.Player.Position = function()
   return GetEntityCoords(PlayerPedId())
 end
 
-ZMan.Player.Teleport = function(pos)
+ZMan.Player.Teleport = function(pos, delay)
   Utils.Game.Misc.ScreenFade(function()
     SetEntityCoords(
       PlayerPedId(),
       pos.x, pos.y, pos.z - 0.3,
       true, true, false, false
     )
-  end, 800)
+  end, delay or 800)
 end
 
 ZMan.Player.ShowNotification = function(type, cap, message, time)
@@ -52,9 +52,8 @@ end
 
 -- So the server can call this
 
-RegisterNetEvent("__zm:teleportPlayer")
-AddEventHandler("__zm:teleportPlayer", function(coords)
-  ZMan.Player.Teleport(coords)
+RegisterNetEvent("__zm:teleportPlayer", function(coords, delay)
+  ZMan.Player.Teleport(coords, delay)
 end)
 
 RegisterNetEvent("__zm:sendNotification")

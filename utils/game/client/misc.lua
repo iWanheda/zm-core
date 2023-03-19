@@ -48,15 +48,14 @@ Utils.Game.Misc =
     BeginScaleformMovieMethod(scaleForm, "CLEAR_ALL")
     EndScaleformMovieMethod()
 
-    local idx = 0
-    for k, v in pairs(buttons) do
-      BeginScaleformMovieMethod(scaleForm, "SET_DATA_SLOT")
-      ScaleformMovieMethodAddParamInt(idx)
-      PushScaleformMovieMethodParameterString(v[1])
-      PushScaleformMovieMethodParameterString(v[2])
-      EndScaleformMovieMethod()
+    for i = 1, #buttons do
+      local element = buttons[i]
 
-      idx = idx + 1
+      BeginScaleformMovieMethod(scaleForm, "SET_DATA_SLOT")
+      ScaleformMovieMethodAddParamInt(#buttons - i)
+      PushScaleformMovieMethodParameterString(element[1])
+      PushScaleformMovieMethodParameterString(element[2])
+      EndScaleformMovieMethod()
     end
     
     BeginScaleformMovieMethod(scaleForm, "DRAW_INSTRUCTIONAL_BUTTONS")
