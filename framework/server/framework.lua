@@ -1,7 +1,18 @@
 ZMan = { }
 
+GetMachineOS = function()
+  local fh, err = assert(io.popen("uname -o 2>/dev/null", "r"))
+  if fh then
+    osname = fh:read()
+  end
+
+  return osname or "Windows"
+end
+
+-- Caches
 ZMan.Resource = GetCurrentResourceName() -- Let's cache it! :]
 ZMan.Database = MySQL.Async
+ZMan.MachineOS = GetMachineOS()
 
 ZMan.Players = { }
 ZMan.Items = { }
@@ -12,9 +23,10 @@ ZMan.Drops = { }
 
 ZMan.Mods = { }
 
--- To test
+-- Modules
 ZMan.Modules = { ["main"] = { } }
 ZMan.Mods.Excluded = 0
+ZMan.Mods.Fatal = 0
 
 -- Player management
 
@@ -25,9 +37,9 @@ ZMan.Instantiate = function(src, cid, inv, ident, pos, job, grade, group)
     ZMan.Players[src] = Player
 
     -- Not sure if I have to add principal everytime a player joins?
-    --ExecuteCommand(("add_principal identifier.license:%s group.%s"):format(Player.GetIdentifier(), Player.GetGroup()))
+    --ExecuteCommand(("add_principal identifier.license:%s group.%s"):format(Player:GetIdentifier(), Player:GetGroup()))
 
-    Utils.Logger.Info(("New player instantiated ~green~(%s)~white~ => ~green~%s"):format(Player.GetBaseName(), src))
+    Utils.Logger.Debug(("New player instantiated ~green~(%s)~white~ => ~green~%s"):format(Player:GetBaseName(), src))
 
     return Player
   end
@@ -40,7 +52,6 @@ end
 ZMan.Destroy = function(src)
   if ZMan.Players[src] ~= nil then
     ZMan.Players[src] = nil
-
     return
   end
 
@@ -85,7 +96,7 @@ ZMan.AddItem = function(item, options)
 		return Utils.Logger.Error(("Item ~green~(%s)~white~ already exists in our Item table!"):format(item))
 	end
 
-	if options.label and options.weight and options.exclusive then
+	if options.label and options.weight and options.exclusive ~= nil then
     Utils.Logger.Debug(
       ("Adding ~green~%s (%s) ~white~to the item list!"):format(options.label, item)
     )
@@ -107,16 +118,18 @@ end
 
 ZMan.GetJob = function(job)
 	if ZMan.Jobs[job] == nil then
-		return Utils.Logger.Error(("Job ~green~(%s)~white~ is not a valid job! (Does not exist in Jobs table)"):format(job))
-	end
+		Utils.Logger.Error(("Job ~green~(%s)~white~ is not a valid job! (Does not exist in Jobs table)"):format(job))
+    return
+  end
 
   return ZMan.Jobs[job]
 end
 
 ZMan.RegisterJob = function(job, data)
 	if ZMan.Jobs[job] ~= nil then
-		return Utils.Logger.Error(("Job ~green~(%s)~white~ already exists in our Jobs table!"):format(job))
-	end
+		Utils.Logger.Error(("Job ~green~(%s)~white~ already exists in our Jobs table!"):format(job))
+    return
+  end
 
 	if data and data.label and data.grades and #data.grades > 0 then
 		ZMan.Jobs[job] = data
@@ -128,7 +141,7 @@ end
 
 -- Command Handler
 
-ZMan.RegisterCommand = function(cmd, cb, console, group)
+ZMan.RegisterCommand = function(cmd, cb, console, group, suggestions)
   if cmd ~= nil and cmd ~= "" then
     if type(group) == "table" then
       for k, v in pairs(group) do
@@ -149,6 +162,23 @@ ZMan.RegisterCommand = function(cmd, cb, console, group)
 
       cb(source, args)
     end, (type(group) == "table"))
+
+    if suggestions and type(suggestions) == "table" then
+      local cmdParams = { }
+
+      for k, v in pairs(suggestions) do
+        if v.name ~= nil and v.desc ~= nil then
+          table.insert(cmdParams, { name = v.name, help = v.desc })
+        end
+      end
+
+      TriggerEvent('chat:addSuggestion', ("/%s"):format(cmd), 
+        suggestions.helpText ~= nil and suggestions.helpText or "", cmdParams)
+    end
+
+    if suggestions == nil then
+      --TriggerEvent('chat:removeSuggestion', ("/%s"):format(cmd))
+    end
   end
 end
 
@@ -156,116 +186,122 @@ end
 -- This is very W.I.P yet, do not use YET
 
 local Module = ZMan.Modules["main"]
-Module.Category = { }
+Module.Category = {
+  ["default"] = json.decode(LoadResourceFile(ZMan.Resource, "modules/default/modules.json")),
+  ["community"] = json.decode(LoadResourceFile(ZMan.Resource, "modules/community/modules.json"))
+}
 
-local moduleEntryList = json.decode(LoadResourceFile(ZMan.Resource, "modules/entries.json"))
-
-for k, v in pairs(moduleEntryList) do
-  if v ~= nil and v ~= "" and type(v) ~= string then
-    Module.Category[v] = json.decode(LoadResourceFile(ZMan.Resource, ("modules/%s/modules.json"):format(v)))
-  else
-    Utils.Logger.Warn(
-      ("File ~green~modules/modules.list.json~white~ contains an ~red~invalid~white~ module => ~lblue~(%s)")
-      :format(v ~= nil and "Unnamed" or "Not Defined")
-    )
-  end
+local cancer = { }
+if ZMan.MachineOS == "Windows" then
+  for dir in io.popen(("dir \"%s\\modules\\default\\staff\\server\" /b"):format(GetResourcePath(ZMan.Resource))):lines() do table.insert(cancer, dir) end
+else
+  for dir in io.popen([[ls -pa /home/user | grep -v /]]):lines() do print(dir) end
 end
 
+local totalModules = 0
 ZMan.CreateEnvironments = function(hierarchy, cb)
   local envs = { }
 
-  -- Re-do this, wtf
-  for k, v in pairs(Module.Category[hierarchy]) do
-    -- There's no need for us to keep going if the Module is excluded
-    if v:find("^exc.") then
-      ZMan.Mods.Excluded = ZMan.Mods.Excluded + 1
-      goto continue -- Weirdly Lua doesn't have a continue statement, so we use goto as a way to go around it
+  local resPath = GetResourcePath(ZMan.Resource)
+  Citizen.CreateThread(function()
+    while not ZMan.Ready do
+      Citizen.Wait(1)
     end
 
-    local env = { }
+    for k, mod in pairs(Module.Category[hierarchy]) do
+      local env = { }
 
-    env.name = v
-    env.hierarchy = hierarchy
-    env.module = { name = v, path = ("modules/%s/%s"):format(hierarchy, v) }
-    env.fn = function()
-      local sharedContent = LoadResourceFile(ZMan.Resource, "modules/default/ems/shared.module.lua")
-      local serverContent = LoadResourceFile(ZMan.Resource, "modules/default/ems/server.module.lua")
-      local clientContent = LoadResourceFile(ZMan.Resource, "modules/default/ems/client.module.lua")
-
-      local sharedCode, sharedErr = load(sharedContent)
-      local serverCode, serverErr = load(serverContent)
-      --local clientCode, clientErr = load(clientContent) -- Send client code
-
-      if sharedErr or serverErr then
-        return Utils.Logger.Error(
-          ("An ~red~exception~white~ was thrown while loading ~red~%s/%s~white~, stack trace: ~yellow~\n\t-> %s")
-          :format(env.name, sharedErr ~= nil and "shared.module.lua" or "server.module.lua", 
-            sharedErr ~= nil and sharedErr or serverErr)
-        )
+      local serverModules, sharedModules, clientModules = { }, { }, { }
+      if ZMan.MachineOS == "Windows" then
+        for dir in io.popen(("dir \"%s\\modules\\%s\\%s\\server\" /b"):format(resPath, hierarchy, mod)):lines() do table.insert(serverModules, dir) end
+        for dir in io.popen(("dir \"%s\\modules\\%s\\%s\\client\" /b"):format(resPath, hierarchy, mod)):lines() do table.insert(clientModules, dir) end
+        for dir in io.popen(("dir \"%s\\modules\\%s\\%s\\shared\" /b"):format(resPath, hierarchy, mod)):lines() do table.insert(sharedModules, dir) end
+      else
+        for dir in io.popen([[ls -pa /home/user | grep -v /]]):lines() do print(dir) end
       end
 
-      pcall(sharedCode)
-      pcall(serverCode)
-    end
+      env.name = mod
+      env.hierarchy = hierarchy
+      env.module = { name = mod, path = ("modules/%s/%s"):format(hierarchy, mod) }
+      env.clientMods = clientModules or { }
+      env.sharedMods = sharedModules or { }
+      env.fn = function()
+        -- Load shared first
+        for _, shrdModule in pairs(sharedModules) do
+          local sharedContent = LoadResourceFile(ZMan.Resource, 
+            ("modules/%s/%s/shared/%s"):format(hierarchy, mod, shrdModule))
 
-    if envs[v] == nil then
-      envs[v] = env
-    end
+          local sharedCode, sharedErr = load(sharedContent ~= nil and sharedContent or "")
 
-    Utils.Logger.Info(("Creating environment for ~green~%s/%s~white~ module."):format(hierarchy, v))
+          if sharedErr then
+            ZMan.Mods.Fatal = ZMan.Mods.Fatal + 1
   
-    ::continue::
-  end
+            Utils.Logger.Error(
+              ("An ~red~exception~white~ was thrown while loading ~red~%s/shared/%s~white~, stack trace: ~yellow~\n\t-> %s")
+              :format(env.name, shrdModule, sharedErr)
+            )
+            
+            goto continue
+          end
 
-  cb(envs)
+          pcall(sharedCode)
+        end
+
+        for _, svModule in pairs(serverModules) do
+          local serverContent = LoadResourceFile(ZMan.Resource, 
+            ("modules/%s/%s/server/%s"):format(hierarchy, mod, svModule))
+            
+          local serverCode, serverErr = load(serverContent ~= nil and serverContent or "")
+
+          if serverErr then
+            ZMan.Mods.Fatal = ZMan.Mods.Fatal + 1
+  
+            Utils.Logger.Error(
+              ("An ~red~exception~white~ was thrown while loading ~red~%s/server/%s~white~, stack trace: ~yellow~\n\t-> %s")
+              :format(env.name, svModule, serverErr)
+            )
+            
+            goto continue
+          end
+
+          pcall(serverCode)
+        end
+
+        totalModules = totalModules + 1
+        Utils.Logger.Debug(("Creating environment for ~green~%s/%s~white~ module."):format(hierarchy, mod))
+
+        ::continue::
+      end
+
+      if envs[mod] == nil then
+        envs[mod] = env
+      end
+
+      ::continue::
+    end
+
+    cb(envs)
+  end)
 end
 
 ZMan.CreateEnvironments("default", function(mods)
   ZMan.Mods.List = mods
   
-  for k, v in pairs(mods) do
-    v.fn()
+  for k, mod in pairs(mods) do
+    mod.fn() -- Run the module's code
   end
 
-  Utils.Logger.Info(
-    ("Successfuly loaded ~green~all~white~ modules => (~red~%i~white~ excluded)")
-    :format(ZMan.Mods.Excluded), true
-  )
+  if ZMan.Mods.Fatal > 0 then
+    Utils.Logger.Info(
+      ("Successfuly loaded ~green~%s~white~ modules => (~red~%i~white~ fatal)")
+      :format(totalModules, ZMan.Mods.Fatal), true
+    )
+  else
+    Utils.Logger.Info(
+      "Successfuly loaded ~green~all~white~ modules", true
+    )
+  end
 end)
-
-ZMan.LoadMod = function(mod, hierarchy)
-  local error, modConfig 
-    = false, LoadResourceFile(ZMan.Resource, ("%s/%s/config.module.lua"):format(hierarchy, mod))
-
-  if modConfig then
-    if error then
-      -- Upload error log to a paste website and print the URL
-      return Utils.Logger.Error(("There was an error loading ~lblue~(%s/%s)~white~ => ~red~https://pastebin.com/xy6H5fg"):format(hierarchy or "boot", mod), true)
-    end
-
-    Utils.Logger.Info(("Loaded ~lblue~(%s/%s)~white~ with success!"):format(hierarchy or "party", mod), true)
-  end
-end
-
-ZMan.Mods.Stop = function(mod)
-  if ZMan.Mods.List[mod] ~= nil then
-    -- Stop module
-    ZMan.Mods.List[mod] = nil
-
-    Utils.Logger.Info(("Successfuly ~red~stopped~white~ a module => ~green~(%s)"):format(mod), true)
-  end
-end
-
-Mod = ZMan.LoadMod
-
--- Maybe use "." as the separator for path? NaMeSpAcEs
--- This is used so we can use mod's functions in other modules
---Mod("ems")
---Mod("police")
---
----- In case you want to stop a module in real time, not sure if it's possible yet, but should be.
----- All we need is to unload the file from memory
---ZMan.Mods.Stop("police")
 
 -- Callback Handler
 
@@ -279,14 +315,12 @@ ZMan.RegisterCallback = function(name, cb)
   ZMan.Callbacks[name] = cb
 end
 
-RegisterNetEvent("__zm:server:callback:trigger")
-AddEventHandler("__zm:server:callback:trigger", function(name, id, ...)
+RegisterNetEvent("__zm:server:callback:trigger", function(name, id, ...)
   local _source = source
 
   if ZMan.Callbacks[name] ~= nil then
-    ZMan.Callbacks[name](_source, function(...)
-      TriggerClientEvent("__zm:client:callback:return", _source, id, ...)
-    end, ...)
+    ZMan.Callbacks[name](_source, ...)
+    TriggerClientEvent("__zm:client:callback:return", _source, id, ...) 
     
     Utils.Logger.Debug(("~green~%s ~white~triggered a server callback ~green~(%s) [%s]"):format(source, name, json.encode(...))) -- Dump?
   else

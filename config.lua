@@ -2,9 +2,10 @@ Config =
 {
   ServerName = "ZimaN",
   Debug = true,
-  AutoSaveTime = 2, -- In Minutes
+  AutoSaveTime = 5, -- In Minutes
   Queue = true, -- Use a custom queue system
   MultiCharacters = false,
+  EnablePvP = true,
   
   SpawnLocation = vector3(-428.6901, 1111.886, 327.6732),
 
@@ -26,17 +27,17 @@ Config =
     crypto = 0
   },
 
-  Identifier = "license",
+  Identifier = "discord",
   BanType = "token",
 
   -- Static Data
   
   Items =
   {
-    ["idcard"] =  { label = "Citizen Card",   weight = 0.1,   exclusive = true },
-    ["phone"] =   { label = "Phone",          weight = 0.6,   exclusive = true },
-    ["cookie"] =  { label = "Cookie",         weight = 0.2,   exclusive = true },
-    ["water"] =   { label = "Water Bottle",   weight = 1.0,   exclusive = true }
+    ["idcard"] =  { label = "Citizen Card",   weight = 0.1,   exclusive = false },
+    ["phone"] =   { label = "Phone",          weight = 0.6,   exclusive = false },
+    ["cookie"] =  { label = "Cookie",         weight = 0.2,   exclusive = false },
+    ["water"] =   { label = "Water Bottle",   weight = 1.0,   exclusive = false }
   },
 
   -- What should new player's default group be?

@@ -91,19 +91,43 @@ RegisterCommand(
 )
 
 RegisterCommand(
+  "motelout",
+  function(source, args)
+    ZMan.Callback("modules:motels:leaveMotel", nil, 1)
+  end
+)
+
+RegisterCommand(
   "car",
   function(source, args)
     if args[1] ~= nil then
-      local hash = GetHashKey(args[1])
-      RequestModel(hash)
+      local model = (type(args[1]) == 'number' and args[1] or GetHashKey(args[1]))
+      local vector = GetEntityCoords(PlayerPedId())
+      networked = true
+      Citizen.CreateThread(function()
+        RequestModel(model)
 
-      while not HasModelLoaded(hash) do
-        Citizen.Wait(1)
-      end
-
-      local x, y, z = GetEntityCoords(PlayerPedId())
-      local vehicle = CreateVehicle(hash, x, y, z, 0.0, true, false)
-      SetPedIntoVehicle(PlayerPedId(), vehicle, -1)
+        while not HasModelLoaded(model) do
+          Citizen.Wait(0)
+        end
+    
+        local vehicle = CreateVehicle(model, vector, GetEntityHeading(PlayerPedId()), networked, false)
+    
+        if networked then
+          local id = NetworkGetNetworkIdFromEntity(vehicle)
+          SetNetworkIdCanMigrate(id, true)
+          SetEntityAsMissionEntity(vehicle, true, false)
+        end
+        SetVehicleHasBeenOwnedByPlayer(vehicle, true)
+        SetVehicleNeedsToBeHotwired(vehicle, false)
+        SetModelAsNoLongerNeeded(model)
+        SetVehRadioStation(vehicle, 'OFF')
+    
+        RequestCollisionAtCoord(vector)
+        while not HasCollisionLoadedAroundEntity(vehicle) do
+          Citizen.Wait(0)
+        end
+      end)
     end
   end
 )

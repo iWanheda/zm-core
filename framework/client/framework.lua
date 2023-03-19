@@ -5,8 +5,8 @@ ZMan.RegisteredCallbacks = { }
 
 -- So that we can store local player's ped in a variable and avoid
 --  calling it multiple times
-local _playerPedId = PlayerPedId()
-ZMan.Ped = _playerPedId
+ZMan.Cache = { }
+ZMan.Cache.Ped = nil
 
 ZMan.Player = { }
 ZMan.Player.Data = { }
@@ -29,7 +29,7 @@ ZMan.Player.Position = function()
 end
 
 ZMan.Player.Teleport = function(pos)
-  ZMan.Utils.Game.Misc.ScreenFade(function()
+  Utils.Game.Misc.ScreenFade(function()
     SetEntityCoords(
       PlayerPedId(),
       pos.x, pos.y, pos.z - 0.3,
@@ -50,16 +50,12 @@ ZMan.Player.ShowNotification = function(type, cap, message, time)
   end
 end
 
--- Test
---ZMan.Player.RegisterCallback(name, callback, ...)
---  if name ~= nil then
---    if ZMan.RegisteredCallbacks[name] ~= nil then
---      ZMan.RegisteredCallbacks[name] = callback(...)
---    else
---      Utils.Logger.Warn(("There's already a ~lblue~callback~white~ registered with that name! ~green~(%s)"):format(name))
---    end
---  end
---end
+-- So the server can call this
+
+RegisterNetEvent("__zm:teleportPlayer")
+AddEventHandler("__zm:teleportPlayer", function(coords)
+  ZMan.Player.Teleport(coords)
+end)
 
 RegisterNetEvent("__zm:sendNotification")
 AddEventHandler(
@@ -90,12 +86,13 @@ AddEventHandler(
 
     local playerPos, h = GetEntityCoords(PlayerPedId()), GetEntityHeading(PlayerPedId())
 
-    NetworkResurrectLocalPlayer(playerPos.x, playerPos.y, playerPos.z, h, false, false)
+    NetworkResurrectLocalPlayer(playerPos, h, false, false)
   end
 )
 
-ZMan.CallbackID = 0
 -- Callback Handler
+ZMan.CallbackID = 0
+
 -- Server callback only
 ZMan.Callback = function(name, cb, ...)
   ZMan.Callbacks[ZMan.CallbackID] = cb
@@ -106,8 +103,55 @@ end
 
 RegisterNetEvent("__zm:client:callback:return")
 AddEventHandler("__zm:client:callback:return", function(id, ...)
-	ZMan.Callbacks[id](...)
-	ZMan.Callbacks[id] = nil
+  if ZMan.Callbacks[id] ~= nil then
+	  ZMan.Callbacks[id](...)
+	  ZMan.Callbacks[id] = nil
+  end
+end)
+
+-- Modules
+
+RegisterNetEvent("__zm:client:modules:load", function(mods)
+  local resName = GetCurrentResourceName()
+  for _, mod in pairs(mods) do
+    for _, sharedModule in pairs(mod.sharedMods) do
+      local sharedContent = LoadResourceFile(resName, 
+        ("modules/%s/%s/shared/%s"):format(mod.hierarchy, mod.name, sharedModule))
+  
+      local sharedCode, sharedErr = load(sharedContent ~= nil and sharedContent or "")
+  
+      if sharedErr then
+        Utils.Logger.Error(
+          ("An ~red~exception~white~ was thrown while loading ~red~%s/shared/%s~white~, stack trace: ~yellow~\n\t-> %s")
+          :format(env.name, sharedModule, sharedErr)
+        )
+        
+        goto continue
+      end
+  
+      pcall(sharedCode)
+    end
+
+    for _, clientModule in pairs(mod.clientMods) do
+      local clientContent = LoadResourceFile(resName, 
+        ("modules/%s/%s/client/%s"):format(mod.hierarchy, mod.name, clientModule))
+  
+      local clientCode, clientErr = load(clientContent ~= nil and clientContent or "")
+  
+      if clientErr then
+        Utils.Logger.Error(
+          ("An ~red~exception~white~ was thrown while loading ~red~%s/client/%s~white~, stack trace: ~yellow~\n\t-> %s")
+          :format(env.name, clientModule, clientErr)
+        )
+        
+        goto continue
+      end
+  
+      pcall(clientCode)
+    end
+  end
+
+  ::continue::
 end)
 
 --ZMan.Menu.Create = function(title, data, cb)
@@ -137,40 +181,40 @@ AddEventHandler("__zm:internal:drop:create", function(props)
   end)
 end)
 
-Citizen.CreateThread(function()
-  local waitMs = 500
-
-  while true do
-    Citizen.Wait(waitMs)
-    local playerPos = ZMan.Player.Position()
-
-    -- Check if we're near any drops
-    for k, v in pairs(dropTable) do
-      local dropCoords = vector3(v.position.x, v.position.y, v.position.z - 0.98)
-
-      if #(playerPos - dropCoords) < 10.0 then
-        local markerAlpha = math.floor(-50.1 * (#(playerPos - dropCoords)) + 255)
-        waitMs = 0
-
-        DrawMarker(
-          25, dropCoords,
-          0.0, 0.0, 0.0,
-          0.0, 0.0, 0.0,
-          0.2, 0.2, 0.2,
-          255, 180, 0, markerAlpha >= 0 and markerAlpha or 0,
-          false, false, false, false, nil, nil, false
-        )
-        DrawMarker(
-          25, dropCoords,
-          0.0, 0.0, 0.0,
-          0.0, 0.0, 0.0,
-          0.3, 0.3, 0.3,
-          110, 0, 255, markerAlpha >= 0 and markerAlpha or 0,
-          false, false, false, false, nil, nil, false
-        )
-      else
-        waitMs = 500
-      end
-    end
-  end
-end)
+--Citizen.CreateThread(function()
+--  local waitMs = 500
+--
+--  while true do
+--    Citizen.Wait(waitMs)
+--    local playerPos = ZMan.Player.Position()
+--
+--    -- Check if we're near any drops
+--    for k, v in pairs(dropTable) do
+--      local dropCoords = vector3(v.position.x, v.position.y, v.position.z - 0.98)
+--
+--      if #(playerPos - dropCoords) < 10.0 then
+--        local markerAlpha = math.floor(-50.1 * (#(playerPos - dropCoords)) + 255)
+--        waitMs = 0
+--
+--        DrawMarker(
+--          25, dropCoords,
+--          0.0, 0.0, 0.0,
+--          0.0, 0.0, 0.0,
+--          0.2, 0.2, 0.2,
+--          255, 180, 0, markerAlpha >= 0 and markerAlpha or 0,
+--          false, false, false, false, nil, nil, false
+--        )
+--        DrawMarker(
+--          25, dropCoords,
+--          0.0, 0.0, 0.0,
+--          0.0, 0.0, 0.0,
+--          0.3, 0.3, 0.3,
+--          110, 0, 255, markerAlpha >= 0 and markerAlpha or 0,
+--          false, false, false, false, nil, nil, false
+--        )
+--      else
+--        waitMs = 500
+--      end
+--    end
+--  end
+--end)

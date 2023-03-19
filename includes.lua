@@ -5,10 +5,6 @@ L = function(str)
   if Config.Locale ~= nil then
     return Locales[Config.Locale][str]
   else
-    return ("Translation is defined as null, please fix!")
+    return Utils.Logger.Error("~red~Config.Locale ~white~is null!")
   end
 end
-
---function RegisterCommand()
---  return
---end

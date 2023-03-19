@@ -4,117 +4,127 @@
 	<meta charset="UTF-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<!--<script src="nui://game/ui/jquery.js"></script>-->
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-	<link rel="stylesheet" href="./css/styles.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" 
-		integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w==" 
-		crossorigin="anonymous" 
-	/>
+	<script src="nui://game/ui/jquery.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="w-screen h-screen hidden">
+	<style>
+		@font-face {
+    	font-family: "Zuume";
+    	src: url('./ui/assets/fonts/zuume_semibold_italic.ttf');
+    	font-weight: 900;
+    	font-style: normal;
+		}
+
+		:root {
+			--corners-color: rgb(61, 61, 61);
+		}
+
+		.border-corners:hover {
+			background:
+				linear-gradient(to right, var(--corners-color) 2px, transparent 1px) 0 0,
+			  linear-gradient(to right, var(--corners-color) 2px, transparent 1px) 0 100%,
+			  linear-gradient(to left, var(--corners-color) 2px, transparent 1px) 100% 0,
+			  linear-gradient(to left, var(--corners-color) 2px, transparent 1px) 100% 100%,
+			  linear-gradient(to bottom, var(--corners-color) 2px, transparent 1px) 0 0,
+			  linear-gradient(to bottom, var(--corners-color) 2px, transparent 1px) 100% 0,
+			  linear-gradient(to top, var(--corners-color) 2px, transparent 1px) 0 100%,
+			  linear-gradient(to top, var(--corners-color) 2px, transparent 1px) 100% 100%;
+			  
+			background-repeat: no-repeat;
+			background-size: 40px 40px;
+		}
+
+		.selected {
+			background:
+				linear-gradient(to right, var(--corners-color) 2px, transparent 1px) 0 100%,
+			  linear-gradient(to left, var(--corners-color) 2px, transparent 1px) 100% 0,
+			  linear-gradient(to bottom, var(--corners-color) 2px, transparent 1px) 100% 0,
+			  linear-gradient(to top, var(--corners-color) 2px, transparent 1px) 0 100%;
+				
+			background-repeat: no-repeat;
+			background-size: 40px 40px;
+		}
+
+		.button {
+		  transform: skew(-20deg);
+		}
+
+		.button:hover {
+			transform: scale(110%) skew(-20deg);
+		}
+		
+		.skew-fix {
+		  transform: skew(20deg);
+		}
+
+		.skew-fix:hover {
+		  transform: skew(20deg);
+		}
+	</style>
 	<script>
-		let isDead = false
-		let currentHealth = 0, currentArmor = 0, maxHealth = 0, currentCash = 0, currentBankMoney = 0, dirtyMoney = 0
+		$(document).ready(() => {
+			window.addEventListener("message", (event) => {
+				const { type } = event.data;
+				if (type === "openRegister")
+					$("body").fadeIn(200);
+				else if (type === "closeRegister")
+					$("body").fadeOut(200);
+			});
 
-		const CalculateColor = ( perc ) =>
-		{
-			var r, g, b = 0
+			$("#btn").click((e) => {
+				const gender = $(selectedDiv).selector;
+				console.log(gender)
+				
+				if (gender)
+					fetch(`https://${GetParentResourceName()}/identityGender`, {
+    				method: 'POST',
+    				headers: {
+        			'Content-Type': 'application/json; charset=UTF-8',
+    				},
+    				body: JSON.stringify(gender)
+					});
+			})
 
-			if ( perc < 50 )
-			{
-				r = 255
-				g = Math.round( 5.1 * perc )
-			}
-			else
-			{
-				g = 255
-				r = Math.round( 510 - 5.10 * perc )
-			}
-			var h = r * 0x10000 + g * 0x100 + b * 0x1
+			let selectedDiv = null;
+			let selectedParent = null;
 
-			return '#' + ( '000000' + h.toString( 16 ) ).slice( -6 )
-		}
+		  $(".border-corners").click((e) => {
+				$(`#${selectedDiv}`).removeClass("grayscale-0 opacity-100");
+				selectedDiv = e.currentTarget.children[0].id;
+				$(`#${selectedDiv}`).addClass("grayscale-0 opacity-100");
 
-		$( document ).on( 'mouseenter', '.ui', e =>
-		{
-			$( '.balance' ).fadeIn( 600)
-		} ).on( 'mouseleave', '.ui', () =>
-		{
-			$( '.balance' ).fadeOut( 150 )
-		} )
+				$(selectedParent).removeClass("selected");
+				selectedParent = e.currentTarget
+				$(selectedParent).addClass("selected");
 
-		document.onkeypress = e =>
-		{
-    		if ( e.keyCode === 107 )
-			{
-				$.post( 'https://zm-core/ui/close' )
-			}
-		}
-
-		window.addEventListener( 'message', e =>
-		{
-			if ( e.data.type === 'ZMan/updateUi' )
-			{
-				currentHealth = e.data.health
-				currentArmor = e.data.armor
-				maxHealth = e.data.maxHealth
-
-				currentCash = e.data.cash
-				currentBankMoney = e.data.bankMon
-				dirtyMoney = e.data.dirtyMon
-
-				isDead = currentHealth <= 0
-
-				$( '#alive' ).css( { color: CalculateColor( currentHealth - 100 ) } )
-
-				$( '.cash' ).text( new Intl.NumberFormat('de-DE').format( currentCash ) )
-				$( '.bank' ).text( new Intl.NumberFormat('de-DE').format( currentBankMoney ) )
-				$( '.userid' ).text( dirtyMoney )
-
-				$( '#health' ).width( ( currentHealth - 100 ) / 100 * 150 + 1 )
-				$( '#armor' ).width( currentArmor * 150 / 100 ) // May be wrong
-
-    			if ( isDead )
-				{
-					$( '#alive' ).hide()
-					$( '#dead' ).show()
-				} 
-				else
-				{
-					$( '#alive' ).show()
-					$( '#dead' ).hide()
-				}
-			}
-		} )
+				if (selectedDiv)
+					$("#btn").addClass("opacity-100");
+			});
+		});
 	</script>
-	<div class="container" style="display: none;">
-		<div class="ui">
-			<div class="mugshot">
-				<img src="https://b.catgirlsare.sexy/K6b1fMEy.jpg" alt="">
+	<div class="w-full h-full flex flex-col space-y-20 items-center justify-center bg-black bg-opacity-80">
+		<div class="flex">
+			<h1 class="text-5xl text-white font-semibold">What's your Gender?</h1>
+		</div>
+		<div id="outside" class="flex space-x-32">
+			<div id="parent-female" class=".parent border-corners p-8 group flex justify-center">
+				<img id="female" src="ui/assets/img/female.png" class="object-contain h-96 duration-200 group-hover:grayscale-0 group-hover:opacity-100 grayscale opacity-40" alt="">
+				<!--<span class="text-white font-semibold opacity-20">Female</span>-->
 			</div>
-			<i id="alive" class="far fa-heart"></i>
-			<i id="dead" class="fas fa-skull-crossbones"></i>
-			<div class="status">
-				<div class="health-wrapper">
-					<div id="health" class="health"></div>
-				</div>
-				<div class="armor-wrapper">
-					<div id="armor" class="armor"></div>
-				</div>
-			</div>
-
-			<div class="balance" style="display: none;">
-				<i class="fas fa-dollar-sign"></i>
-				<span class="cash"></span>
-
-				<i class="bank-i fas fa-university"></i>
-				<span class="bank"></span>
-
-				<i class="user-i fas fa-user"></i>
-				<span class="userid"></span>
+			<div id="parent-male" class=".parent border-corners p-8 group flex justify-center">
+				<img id="male" src="ui/assets/img/male.png" class="object-contain h-96 duration-200 group-hover:grayscale-0 group-hover:opacity-100 grayscale opacity-40" alt="">
+				<!--<span class="text-white font-semibold opacity-20">Male</span>-->
 			</div>
 		</div>
-    </div>
+		<button id="btn" class="opacity-0 button bg-cyan-600 px-4 flex items-center duration-200">
+			<div class="flex items-center space-x-4">
+				<span class="skew-fix button text-white font-semibold text-3xl" style="font-family: 'Zuume'">
+					Continue
+				</span>
+			</div>
+		</button>
+	</div>
 </body>
 </html>

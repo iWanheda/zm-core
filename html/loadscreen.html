@@ -10,15 +10,12 @@
 </head>
 <body style="background-color: black;">
 	<script>
-		window.addEventListener( 'message', e =>
-		{
-			if ( e.data.type === 'ZMan/closeLoading' )
-			{
-				$( body ).fadeOut( 2000 )
-			}
-		} )
+		window.addEventListener('message', (e) => {
+			if (e.data.type === 'ZMan/closeLoading')
+				$(body).fadeOut(2000)
+		})
 
-		var audio = new Audio( './resources/music/loading.mp3' )
+		var audio = new Audio('./resources/music/loading.mp3')
 		audio.volume = 0.05
 		audio.play()
 	</script>

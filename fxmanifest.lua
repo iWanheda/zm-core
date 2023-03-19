@@ -1,4 +1,4 @@
-fx_version 'adamant'
+fx_version 'cerulean'
 game 'gta5'
 
 author 'ShahZaM </>'
@@ -56,4 +56,4 @@ shared_scripts {
 	'framework/shared/*.lua'
 }
 
-dependency 'mysql-async'
+dependencies { 'mysql-async', 'zm-ui' }
