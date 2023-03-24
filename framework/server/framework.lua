@@ -11,7 +11,6 @@ end
 
 -- Caches
 ZMan.Resource = GetCurrentResourceName() -- Let's cache it! :]
-ZMan.Database = MySQL.Async
 ZMan.MachineOS = GetMachineOS()
 
 ZMan.Players = { }
@@ -296,9 +295,7 @@ ZMan.CreateEnvironments("default", function(mods)
       :format(totalModules, ZMan.Mods.Fatal), true
     )
   else
-    Utils.Logger.Info(
-      "Successfuly loaded ~green~all~white~ modules", true
-    )
+    Utils.Logger.Info("Successfuly loaded ~green~all~white~ modules", true)
   end
 end)
 

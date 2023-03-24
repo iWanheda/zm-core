@@ -9,7 +9,6 @@ RegisterNetEvent("__zm:client:staff:update", function(staffMode)
 
       if not isInMapper then
         Utils.Game.Misc.ShowInstructionalButtons({{ "~INPUT_MULTIPLAYER_INFO~", "Mapper" }, { "~INPUT_VEH_FLY_ATTACK_CAMERA~", "Admin Menu" }})
-        end
       end
     end
   end)

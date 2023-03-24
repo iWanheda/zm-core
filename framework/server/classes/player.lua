@@ -158,20 +158,17 @@ function CPlayer:SavePlayer()
   local playerPos, citizenId, playerInventory = self:GetPosition(), self:GetCitizenId(), self:GetInventory()
   local x, y, z, h = playerPos.x, playerPos.y, playerPos.z, GetEntityHeading(GetPlayerPed(self.src))
 
-  MySQL.Async.execute(
-    "UPDATE users SET last_location = @last_location, inventory = @inv, job = @job, grade = @grade, customization = @customization, identity = @identity WHERE citizenid = @citizenid",
-    {
-      ["@citizenid"] = citizenId,
+  exports.oxmysql:update_async("UPDATE users SET last_location = ?, inventory = ?, job = ?, grade = ?, customization = ?, identity = ? WHERE citizenid = @citizenid",
+  {
+    ["@citizenid"] = citizenId,
 
-      ["@last_location"] = json.encode({ x, y, z, h }),
-      ["@inv"] = json.encode(playerInventory),
-      ["@job"] = self:GetJob(),
-      ["@grade"] = self:GetJobGrade(),
-      ["@customization"] = json.encode(self:GetOutfit()),
-      ["@identity"] = json.encode(self:GetName())
-    },
-    function() end
-  )
+    json.encode({ x, y, z, h }),
+    json.encode(playerInventory),
+    self:GetJob(),
+    self:GetJobGrade(),
+    json.encode(self:GetOutfit()),
+    json.encode(self:GetName())
+  })
 end
 
 --[[
@@ -294,25 +291,24 @@ end
 -- TODO: Test this
 function CPlayer:SetGroup(group)
   if group ~= nil then
-    if Config.Groups[group] then
+    if Config.Groups[group] ~= nil then
       ExecuteCommand(("remove_principal identifier.license:%s zman.groups.%s"):format(self:GetIdentifier(), self:GetGroup())) -- Remove old group
       ExecuteCommand(("add_principal identifier.license:%s zman.groups.%s"):format(self:GetIdentifier(), group)) -- Add new group
       
       self.group = group
+    else
+      Utils.Logger.Warn(("Group ~red~%s~white~ does not exist in ~lblue~Groups ~white~table! (Check ~yellow~%s/config.lua~white~)"):format(group, ZMan.Resource), true)
     end
-  else
-    Utils.Logger.Warn(("Group ~red~%s~white~ does not exist in ~lblue~Groups ~white~table! (Check ~yellow~%s/config.lua~white~)"):format(group, ZMan.Resource), true)
   end
 end
 
--- Triggers
-function CPlayer:Callback(callback, ...)
+function CPlayer:Callback(callback, cb, ...)
   -- Check ZMan.Callbacks table if callback is valid
-  if callback ~= nil then
-    if ZMan.Callbacks[callback] then
-      TriggerClientEvent(callback, self.src, ...)
-    else
-      Utils.Logger.Warn(("Attempted to trigger an ~red~invalid~white~ callback! ~green~(%s) => (%s) %s"):format(callback, self.src, self.GetBaseName()))
-    end
+  if callback ~= nil and ZMan.Callbacks[callback] ~= nil then
+    TriggerClientEvent(callback, self.src, ...) -- TODO: Refactor this
+    cb(true)
+  else
+    Utils.Logger.Warn(("Attempted to trigger an ~red~invalid~white~ callback! ~green~(%s) => (%s) %s"):format(callback, self.src, self:GetBaseName()))
+    cb(false)
   end
 end

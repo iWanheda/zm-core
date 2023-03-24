@@ -14,6 +14,8 @@ ZMan.RegisterCommand(
     print(("Job: %s | Grade: %s | Group: %s | Identity: %s %s | Citizen ID: %s"):format(
       Player:GetJob(), Player:GetJobGrade(), Player:GetGroup(), Player:GetName().first, Player:GetName().last, Player:GetCitizenId()
     ))
+
+    Player:Callback("test", function(success) print(tostring(success)) end, 213, "np")
   end, false
 )
 

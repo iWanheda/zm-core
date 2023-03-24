@@ -140,7 +140,7 @@ RegisterNetEvent("__zm:client:modules:load", function(mods)
       if clientErr then
         Utils.Logger.Error(
           ("An ~red~exception~white~ was thrown while loading ~red~%s/client/%s~white~, stack trace: ~yellow~\n\t-> %s")
-          :format(env.name, clientModule, clientErr)
+          :format(mod.name, clientModule, clientErr)
         )
         
         goto continue
@@ -152,20 +152,6 @@ RegisterNetEvent("__zm:client:modules:load", function(mods)
 
   ::continue::
 end)
-
---ZMan.Menu.Create = function(title, data, cb)
---  local menu = CMenu.Create(title)
---  
---  if menu then
---    return menu
---  end
---end
-
---local Menu = ZMan.Menu.Create("Example", menuData, function(opt)
---  if s.option == 1 then
---    print(1)
---  end
---end, true)
 
 local dropTable = { }
 

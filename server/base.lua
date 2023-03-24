@@ -142,6 +142,10 @@ end)
 -- TODO: UpdatePlayer everytime we instantiate a new Player, fix some bugs and improve this overall!
 RegisterNetEvent("__zm:joined")
 AddEventHandler("__zm:joined", function()
+  if ZMan.Players[source] ~= nil then
+    return -- Use this to avoid event spammers (with cheats)
+  end
+
   -- Because we reload the script a lot of times :')
   if Config.Debug then
     if tempPlayers[source] == nil then
@@ -158,10 +162,6 @@ AddEventHandler("__zm:joined", function()
     end
   end
 
-  if ZMan.Players[source] ~= nil then
-    return -- Use this to avoid event spammers (with cheats)
-  end
-
   local _source, characters = source, { }
 
   --SetRoutingBucketEntityLockdownMode(1, "strict") -- Set lockdown mode as strict so no entities can be created on client-side
@@ -172,24 +172,21 @@ AddEventHandler("__zm:joined", function()
 
   TriggerClientEvent("__zm:client:modules:load", _source, ZMan.Mods.List)
 
-  ZMan.Database.fetchAll("SELECT * FROM users WHERE identifier = @id",
-  { ["@id"] = tempPlayers[_source] },
-  function(res)
-    if #res > 0 then
-      local Player = ZMan.Instantiate(_source, 
-        res.citizenid, json.decode(res.inventory), 
-        json.decode(res.identity), json.decode(res.last_location), 
-        json.decode(res.customization), 0, res.group)
-    
-      Player:UpdatePlayer({ last_location = json.decode(res.last_location), 
-        group = json.decode(res.group) })
-    else
-      ZMan.Instantiate(_source, 
-        Utils.Management.GenCitizenId(), Config.DefaultInventory, {}, {}, nil, 0, Config.DefaultGroup)
-      
-      TriggerEvent("__zm:server:modules:indentity:register", _source)
-    end
-  end)
+  local row = exports.oxmysql:single_async("SELECT * FROM users WHERE identifier = ?", { tempPlayers[_source] })
+  if row then
+    local Player = ZMan.Instantiate(_source, 
+      row.citizenid, json.decode(row.inventory), 
+      json.decode(row.identity), json.decode(row.last_location), 
+      json.decode(row.customization), 0, row.group)
+  
+    Player:UpdatePlayer({ last_location = json.decode(row.last_location), 
+      group = json.decode(row.group) })
+  else
+    ZMan.Instantiate(_source, 
+      Utils.Management.GenCitizenId(), Config.DefaultInventory, {}, {}, nil, 0, Config.DefaultGroup)
+
+    TriggerEvent("__zm:server:modules:indentity:register", _source)
+  end
 
   tempPlayers[_source] = nil
 end)
@@ -202,9 +199,9 @@ AddEventHandler("__zm:internal:chars:choose", function(data)
   if data and data.citizenId ~= nil then
     print("citizen id")
   elseif data and data.firstName and data.lastName and data.dateBirth and data.charGender then
-    ZMan.Database.fetchAll("SELECT citizenid FROM user_characters WHERE identifier = @id",
+    ZMan.Database.fetchAll("SELECT citizenid FROM user_characters WHERE identifier = ?",
       {
-        ["@id"] = tempPlayers[_source]
+        tempPlayers[_source]
       }, function(res)
       if res then 
         if #res > 5 then

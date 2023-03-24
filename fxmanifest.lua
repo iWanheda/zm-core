@@ -32,7 +32,7 @@ client_scripts {
 }
 
 server_scripts {
-	'@mysql-async/lib/MySQL.lua',
+	'@oxmysql/lib/MySQL.lua',
 	'utils/**/server/*.lua',
 
 	'framework/server/classes/player.lua', -- Make sure this is loaded before anything else
@@ -55,4 +55,4 @@ shared_scripts {
 	'framework/shared/*.lua'
 }
 
-dependencies { 'mysql-async', 'zm-ui' }
+dependencies { 'oxmysql', 'zm-ui' }

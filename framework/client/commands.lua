@@ -122,6 +122,7 @@ RegisterCommand(
         SetVehicleNeedsToBeHotwired(vehicle, false)
         SetModelAsNoLongerNeeded(model)
         SetVehRadioStation(vehicle, 'OFF')
+        TaskWarpPedIntoVehicle(PlayerPedId(), vehicle, -1)
     
         RequestCollisionAtCoord(vector)
         while not HasCollisionLoadedAroundEntity(vehicle) do
