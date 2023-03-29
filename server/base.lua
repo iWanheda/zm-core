@@ -172,7 +172,8 @@ AddEventHandler("__zm:joined", function()
 
   TriggerClientEvent("__zm:client:modules:load", _source, ZMan.Mods.List)
 
-  local row = exports.oxmysql:single_async("SELECT * FROM users WHERE identifier = ?", { tempPlayers[_source] })
+  local row = exports.oxmysql:single_async("SELECT * FROM users WHERE identifier = ?", 
+    { tempPlayers[_source] })
   if row then
     local Player = ZMan.Instantiate(_source, 
       row.citizenid, json.decode(row.inventory), 
