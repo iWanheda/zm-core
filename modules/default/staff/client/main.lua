@@ -1,17 +1,32 @@
-local mapperCam, isInStaff, isInMapper = nil, false, false
+local mapperCam, isInStaff, isInMapper, specTarget, specCoords = nil, false, false, nil, nil
 
+-- TODO: Add player to gamerTags everytime it goes into scope and remove it otherwise
+local gamerTags = { }
 RegisterNetEvent("__zm:client:staff:update", function(staffMode)
   isInStaff = staffMode
 
-  Citizen.CreateThread(function()
-    while isInStaff do
-      Citizen.Wait(1)
-
-      if not isInMapper then
-        Utils.Game.Misc.ShowInstructionalButtons({{ "~INPUT_MULTIPLAYER_INFO~", "Mapper" }, { "~INPUT_VEH_FLY_ATTACK_CAMERA~", "Admin Menu" }})
-      end
+  if isInStaff == true then
+    for _, player in pairs(GetActivePlayers()) do
+      local ped = GetPlayerPed(player)
+      local tag = CreateFakeMpGamerTag(ped, GetPlayerName(player), false, false, "", 0)
+  
+      table.insert(gamerTags, tag)
     end
-  end)
+    
+    Citizen.CreateThread(function()
+      while isInStaff do
+        Citizen.Wait(1)
+  
+        if not isInMapper then
+          Utils.Game.Misc.ShowInstructionalButtons({{ "~INPUT_MULTIPLAYER_INFO~", "Mapper" }, { "~INPUT_VEH_FLY_ATTACK_CAMERA~", "Admin Menu" }})
+        end
+      end
+  
+      for k, v in pairs(gamerTags) do
+        RemoveMpGamerTag(v)
+      end
+    end)
+  end
 end)
 
 RegisterCommand(
@@ -105,3 +120,57 @@ RegisterCommand(
     isInMapper = not isInMapper
   end
 )
+
+Utils.Game.Input.BindKey("X", "quitspec", function()
+  if specTarget ~= nil then
+    QuitSpectatorMode()
+  end
+end)
+
+local targetCamera = CreateCam(`DEFAULT_SCRIPTED_CAMERA`, true)
+RegisterCommand("spectate", function(source, args)
+  if not isInStaff then return end
+
+  local targetId = tonumber(args[1])
+
+  if targetId then
+    StartSpectatorMode(targetId)
+  end
+end)
+
+StartSpectatorMode = function(targetId)
+  local targetPed = GetPlayerPed(GetPlayerFromServerId(targetId))
+  if ZMan.Cache.Ped == targetPed then return end
+
+  specCoords = GetEntityCoords(ZMan.Cache.Ped)
+
+  --SetEntityCollision(ZMan.Cache.Ped, false, false)
+  --SetEntityVisible(ZMan.Cache.Ped, false)
+
+  Citizen.CreateThread(function()
+    while specTarget == targetId do
+      Citizen.Wait(1)
+
+      --local targetCoords = GetEntityCoords(targetPed)
+      --SetEntityCoords(ZMan.Cache.Ped, targetCoords)
+      SetGameplayCamFollowPedThisUpdate(targetPed)
+      Utils.Game.Misc.ShowInstructionalButtons({{ "~INPUT_VEH_DUCK~", "Quit Spectating" }})
+    end
+  end)
+
+  specTarget = targetId
+end
+
+QuitSpectatorMode = function()
+  specTarget = nil
+
+  SetCamActive(targetCamera, false)
+  DestroyCam(targetCamera, false)
+  RenderScriptCams(false, true, 200, false, false)
+
+  SetEntityCollision(ZMan.Cache.Ped, true, true)
+  SetEntityVisible(ZMan.Cache.Ped, true)
+
+  SetEntityCoords(ZMan.Cache.Ped, specCoords)
+  specCoords = nil
+end

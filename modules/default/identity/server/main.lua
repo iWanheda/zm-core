@@ -13,6 +13,11 @@ AddEventHandler("__zm:server:modules:indentity:data", function(source)
 
 end)
 
+ZMan.RegisterCallback("modules:identity:data", function(source, data)
+  print("triggered")
+  print(json.encode(data))
+end)
+
 ZMan.RegisterCallback("modules:identity:appearance", function(source, appearance)
   print(json.encode(appearance))
 end)
