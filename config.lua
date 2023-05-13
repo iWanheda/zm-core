@@ -5,7 +5,7 @@ Config =
   AutoSaveTime = 5, -- In Minutes
   Queue = true, -- Use a custom queue system
   MultiCharacters = false,
-  EnablePvP = true,
+  EnablePvP = false,
   
   SpawnLocation = vector3(-428.6901, 1111.886, 327.6732),
 
