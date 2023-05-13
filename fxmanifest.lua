@@ -24,15 +24,11 @@ client_scripts {
   -- We can't use globbing here because /client/framework needs to be loaded before everything else
 	'framework/client/framework.lua',
 	'framework/client/commands.lua',
-	'framework/client/menu.lua',
-
-  'framework/shared/**/client/*.lua',
 
 	'client/*.lua'
 }
 
 server_scripts {
-	'@oxmysql/lib/MySQL.lua',
 	'utils/**/server/*.lua',
 
 	'framework/server/classes/player.lua', -- Make sure this is loaded before anything else
@@ -40,8 +36,6 @@ server_scripts {
   -- We can't use globbing here because /server/framework needs to be loaded before everything else
   'framework/server/framework.lua',
 	'framework/server/commands.lua',
-
-  'framework/shared/**/server/*.lua',
 
 	'server/base.lua'
 }
@@ -51,8 +45,7 @@ shared_scripts {
 
 	'utils/utils.lua',
 	'utils/**/shared/*.lua',
-
-	'framework/shared/*.lua'
 }
 
-dependencies { 'oxmysql', 'zm-ui' }
+dependencies { 'zm-ui' }
+server_dependency 'mongodb'

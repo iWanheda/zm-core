@@ -15,7 +15,7 @@ ZMan.Items = Config.Items
 -- Local Player
 
 ZMan.Player.UpdateData = function(key, value)
-  ZMan.Player.Data[tostring(key)] = json.decode(value)
+  ZMan.Player.Data[tostring(key)] = value
 end
 
 ZMan.Player.GetData = function(key)

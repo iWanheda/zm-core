@@ -63,5 +63,25 @@ Utils.Game.Misc =
     EndScaleformMovieMethod()
 
     DrawScaleformMovieFullscreen(scaleForm, 255, 255, 255, 255, 0)
+  end,
+
+  RaycastFromCamera = function(flag, debug)
+    local coords, normal = GetWorldCoordFromScreenCoord(0.5, 0.5)
+    local destination = coords + normal * 6
+    local handle = StartShapeTestLosProbe(coords.x, coords.y, coords.z, destination.x, destination.y, destination.z,
+      flag and flag or 0, ZMan.Cache.Ped, 4)
+  
+    if debug then
+      DrawLine(coords, destination, 255, 0, 0, 255)
+    end
+
+    while true do
+      Citizen.Wait(1)
+      local ret, hit, endCoords, surfaceNormal, entityHit = GetShapeTestResult(handle)
+  
+      if ret ~= 1 then
+        return hit, entityHit, endCoords, surfaceNormal
+      end
+    end
   end
 }

@@ -9,7 +9,7 @@ ZMan.RegisterCallback("modules:motels:getInMotel", function(source, motelId)
 
   local newBucket = source + 1
   SetPlayerRoutingBucket(source, newBucket)
-  SetRoutingBucketPopulationEnabled(newBucket, true)
+  SetRoutingBucketPopulationEnabled(newBucket, false)
 end)
 
 ZMan.RegisterCallback("modules:motels:leaveMotel", function(source, motelId)

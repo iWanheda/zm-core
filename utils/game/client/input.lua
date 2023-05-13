@@ -1,20 +1,5 @@
 Utils.Game.Input =
 {
-  Keys =
-  {
-    A = 34,
-    B = 29,
-    C = 26,
-    D = 30,
-    E = 51,
-    F = 23,
-    G = 47,
-    H = 74,
-    I = 00,
-    J = 00,
-    K = 311
-  },
-
   Binds = { },
 
   -- TODO: Implement the supported hold system instead of only toggle :)

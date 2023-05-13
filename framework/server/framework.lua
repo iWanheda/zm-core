@@ -12,6 +12,7 @@ end
 -- Caches
 ZMan.Resource = GetCurrentResourceName() -- Let's cache it! :]
 ZMan.MachineOS = GetMachineOS()
+ZMan.Database = exports.mongodb
 
 ZMan.Players = { }
 ZMan.Items = { }
@@ -95,7 +96,7 @@ ZMan.AddItem = function(item, options)
 		return Utils.Logger.Error(("Item ~green~(%s)~white~ already exists in our Item table!"):format(item))
 	end
 
-	if options.label and options.weight and options.exclusive ~= nil then
+	if options.label and options.weight then
     Utils.Logger.Debug(
       ("Adding ~green~%s (%s) ~white~to the item list!"):format(options.label, item)
     )
@@ -103,8 +104,8 @@ ZMan.AddItem = function(item, options)
 		ZMan.Items[item] = options
 		-- Add to database
 	else
-		Utils.Logger.Error(("Cannot add item ~green~%s~white~ because it has invalid options! Label: ~green~%s~white~ Weight: ~green~%s~white~ Exclusive: ~green~%s"):format(
-			item, options.label or "Not Defined", options.weight or "Not Defined", options.exclusive or "Not Defined"
+		Utils.Logger.Error(("Cannot add item ~green~%s~white~ because it has invalid options! Label: ~green~%s~white~ Weight: ~green~%s"):format(
+			item, options.label or "Not Defined", options.weight or "Not Defined"
 		))
 	end
 end

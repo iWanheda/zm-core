@@ -1,0 +1,10 @@
+--GiveItem = function(id, itemSerial, quantity)
+--  ZMan.Callback("inventory:give", nil, id, itemSerial, quantity)
+--end
+--
+----TriggerScreenblurFadeIn(2000)
+--
+--RegisterReactCallback("inv:getClosePlayers", function()
+--  local closePlayers = GetClosePlayers(true) -- [{ id: x, firstName: y, lastName: z }]
+--  SendReactMessage("inventory/setClosePlayers", closePlayers)
+--end)

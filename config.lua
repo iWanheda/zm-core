@@ -9,7 +9,7 @@ Config =
   
   SpawnLocation = vector3(-428.6901, 1111.886, 327.6732),
 
-  SpawnPeds = true, -- Should we spawn default GTA MP peds on the streets?
+  SpawnPeds = false, -- Should we spawn default GTA MP peds on the streets?
 
   -- Players will be given these items upon first join
   DefaultInventory =
@@ -34,10 +34,11 @@ Config =
   
   Items =
   {
-    ["idcard"] =  { label = "Citizen Card",   weight = 0.1,   exclusive = false },
-    ["phone"] =   { label = "Phone",          weight = 0.6,   exclusive = false },
-    ["cookie"] =  { label = "Cookie",         weight = 0.2,   exclusive = false },
-    ["water"] =   { label = "Water Bottle",   weight = 1.0,   exclusive = false }
+    ["idcard"] =        { label = "Citizen Card", weight = 0.1, type = "default" },
+    ["creditcard"] =    { label = "Credit Card",  weight = 0.1, type = "default" },
+    ["phone"] =         { label = "Phone",        weight = 0.6, type = "default" },
+    ["cookie"] =        { label = "Cookie",       weight = 0.2, type = "consumable" },
+    ["water"] =         { label = "Water Bottle", weight = 1.0, type = "consumable" }
   },
 
   -- What should new player's default group be?

@@ -77,7 +77,6 @@ Citizen.CreateThread(function()
   end
 
   ZMan.Cache.Ped = PlayerPedId()
-
   exports.spawnmanager:setAutoSpawn(false)
 
   local kvp = GetResourceKvpString("KireSefid")
@@ -94,17 +93,17 @@ Citizen.CreateThread(function()
   end
 
   local playerPos = ZMan.Player.Data.last_location
+  print(json.encode(playerPos))
 
-  if playerPos ~= nil then
-    exports.spawnmanager:spawnPlayer(
-    {
-      x = playerPos[1],
-      y = playerPos[2],
-      z = playerPos[3],
-      heading = playerPos[4],
-      skipFade = false
-    })
-  end
+  -- re enable
+  --exports.spawnmanager:spawnPlayer(
+  --  {
+  --    x = playerPos.x or Config.SpawnLocation.x,
+  --    y = playerPos.y or Config.SpawnLocation.y,
+  --    z = playerPos.z or Config.SpawnLocation.z,
+  --    heading = playerPos.h or 0,
+  --    skipFade = false
+  --  })
 
   SetPedDefaultComponentVariation(GetPlayerPed())
 

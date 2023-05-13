@@ -14,25 +14,24 @@ function CPlayer.Create(src, citizenid, inventory, identity, last_location, job,
   local playerInv = inventory
 
   for k, v in pairs(playerInv) do
-    -- If an inventory item is invalid (has been removed from the config) we will remove the invalid item from player's inventory
+    -- If an inventory item is invalid (has been removed from the config)
     if Config.Items[k] == nil then
       Utils.Logger.Warn(("Player ~green~%s~white~ has an ~red~invalid~white~ item ~yellow~(%s)"):format(GetPlayerName(src), k))
-      playerInv[k] = nil -- Remove the invalid item from Player's inventory
+      -- Maybe remove the invalid item from Player's inventory?
     end
   end
 
   self.src = src
 
-   -- changeme banned
-  local identifier = "license:123" --tostring(GetPlayerIdentifier(self.src, 0)):sub(9)
+  local identifier = GetPlayerIdentifier(self.src, 0):sub(9)
 
   self.citizenid = citizenid
   self.identifier = identifier
 
   self.inv = playerInv
   
-  self.firstname = identity.first
-  self.lastname = identity.last
+  self.first_name = identity.first
+  self.last_name = identity.last
   self.dob = identity.dob
   self.gender = identity.gender
 
@@ -80,7 +79,7 @@ function CPlayer:GetIdentifier()
 end
 
 function CPlayer:GetName()
-  return { first = self.firstname, last = self.lastname }
+  return { first = self.first_name, last = self.last_name }
 end
 
 function CPlayer:GetAge()
@@ -88,7 +87,7 @@ function CPlayer:GetAge()
 end
 
 function CPlayer:GetOutfit()
-  return {}
+  return self.customization
 end
 
 function CPlayer:GetBaseName()
@@ -109,7 +108,6 @@ function CPlayer:GetJob()
   end
 end
 
--- Change this
 function CPlayer:GetJobGrade()
   return self.grade
 end
@@ -158,16 +156,14 @@ function CPlayer:SavePlayer()
   local playerPos, citizenId, playerInventory = self:GetPosition(), self:GetCitizenId(), self:GetInventory()
   local x, y, z, h = playerPos.x, playerPos.y, playerPos.z, GetEntityHeading(GetPlayerPed(self.src))
 
-  exports.oxmysql:update_async("UPDATE users SET last_location = ?, inventory = ?, job = ?, grade = ?, customization = ?, identity = ? WHERE citizenid = @citizenid",
+  ZMan.Database:updateOne("users", { citizen_id = citizenId },
   {
-    ["@citizenid"] = citizenId,
-
-    json.encode({ x, y, z, h }),
-    json.encode(playerInventory),
-    self:GetJob(),
-    self:GetJobGrade(),
-    json.encode(self:GetOutfit()),
-    json.encode(self:GetName())
+    last_location = json.encode({ x, y, z, h }),
+    inventory = json.encode(playerInventory),
+    job = self:GetJob(),
+    job_grade = self:GetJobGrade(),
+    customization = json.encode(self:GetOutfit()),
+    identity = json.encode(self:GetName())
   })
 end
 
@@ -176,8 +172,8 @@ end
   @last :string => Set last name of Player (identity)
 ]]
 function CPlayer:SetName(first, last)
-  self.firstname = first
-  self.lastname = last
+  self.first_name = first
+  self.last_name = last
 end
 
 function CPlayer:Teleport(coords, delay)
@@ -210,7 +206,7 @@ end
 function CPlayer:AddItem(item, quantity)
   local playerInventory, playerName = self:GetInventory(), self:GetBaseName()
 
-  quantity = tonumber(quantity)
+  quantity = tonumber(quantity) or 1
 
   if type(item) ~= "string" then
     return Utils.Logger.Warn(("Item (%s) needs to be a string!"):format(item))

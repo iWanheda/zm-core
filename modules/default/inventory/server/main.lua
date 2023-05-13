@@ -1,0 +1,26 @@
+--ZMan.RegisterCallback("inventory:item:give", function(source, data)
+--  local closePlayers = exports.onesync_scopes:GetPlayersInScope(source)
+--
+--  -- if no serial its consumable or normal item
+--
+--  if not data.playerId or not data.itemSerial then return end
+--
+--  local Player = ZMan.Get(source)
+--  if not closePlayers[data.playerId] then
+--    Player:ShowNotification("error", "Ninguém por perto!")
+--  end
+--
+--  local Target = ZMan.Get(data.playerId)
+--  
+--  local playerInv = Player:GetInventory()
+--  for key, item in pairs(playerInv) do
+--    if item.serial == data.itemSerial then
+--      Target:AddItem(item, data.quantity)
+--      Player:RemoveItem(item.serial, data.quantity)
+--
+--      Target:ShowNotification("success", ("Recebeste ~%s~%s~reset~ (x%s)"):format(item.rarity or "white", item.label, data.quantity))
+--
+--      break
+--    end
+--  end
+--end)
